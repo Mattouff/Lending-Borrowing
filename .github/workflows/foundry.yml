@@ -20,6 +20,7 @@ jobs:
         with:
           submodules: recursive
           sparse-checkout: |
+            .gitmodules
             contracts
 
       - name: Install Foundry
