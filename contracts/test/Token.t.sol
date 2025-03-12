@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.28;
 
 import "forge-std/Test.sol";
 import "../src/Token.sol";
@@ -16,12 +16,12 @@ contract TokenTest is Test {
 
     function testInitialBalance() public view{
         uint256 balance = token.balanceOf(owner);
-        assertEq(balance, initialSupply, "Solde insufisant");
+        assertEq(balance, initialSupply, "Insufficient initial balance");
     }
 
     function testNameAndSymbol() public view {
-        assertEq(token.name(), "LendingBorrowing", "Nom incorrect");
-        assertEq(token.symbol(), "LBT", "Symbole incorrect");
+        assertEq(token.name(), "LendingBorrowing", "Incorrect name");
+        assertEq(token.symbol(), "LBT", "Incorrect symbol");
     }
 
     function testTransfer() public {
@@ -30,8 +30,8 @@ contract TokenTest is Test {
 
         token.transfer(receiver, amount);
 
-        assertEq(token.balanceOf(receiver), amount, "Solde du destinataire incorrect");
-        assertEq(token.balanceOf(owner), initialSupply - amount, "Solde de l'expediteur incorrect");
+        assertEq(token.balanceOf(receiver), amount, "Recipient balance incorrect");
+        assertEq(token.balanceOf(owner), initialSupply - amount, "Owner balance incorrect");
     }
 
     function testApprovalAndTransferFrom() public {
@@ -39,14 +39,14 @@ contract TokenTest is Test {
         uint256 amount = 50 * 10**18;
 
         token.approve(spender, amount);
-        assertEq(token.allowance(owner, spender), amount, "Allocation incorrecte");
+        assertEq(token.allowance(owner, spender), amount, "Allocation incorrect");
 
         address receiver = address(0xDAD);
 
         vm.prank(spender);
         token.transferFrom(owner, receiver, amount);
 
-        assertEq(token.balanceOf(receiver), amount, "Solde du destinataire incorrect");
-        assertEq(token.allowance(owner, spender), 0, "Allocation incorrecte");
+        assertEq(token.balanceOf(receiver), amount, "Recipient balance incorrect");
+        assertEq(token.allowance(owner, spender), 0, "Allocation incorrect");
     }
 }
