@@ -16,22 +16,14 @@ func Connect() (*gorm.DB, error) {
 	var db *gorm.DB
 	var err error
 
-	databaseURL := os.Getenv("DATABASE_URL")
+	dsn := os.Getenv("POSTGRES_URL")
 
-	if databaseURL == "" {
-		host := os.Getenv("PGHOST")
-		user := os.Getenv("PGUSER")
-		password := os.Getenv("PGPASSWORD")
-		dbname := os.Getenv("PGDATABASE")
-
-		port := os.Getenv("DB_PORT")
-		if port == "" {
-			port = "5432"
-		}
-
-		databaseURL = fmt.Sprintf(
-			"host=%s user=%s password=%s dbname=%s port=%s sslmode=require TimeZone=UTC",
-			host, user, password, dbname, port,
+	if dsn == "" {
+		dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=5432 sslmode=require",
+			os.Getenv("POSTGRES_HOST"),
+			os.Getenv("POSTGRES_USER"),
+			os.Getenv("POSTGRES_PASSWORD"),
+			os.Getenv("POSTGRES_DATABASE"),
 		)
 	}
 
@@ -39,7 +31,7 @@ func Connect() (*gorm.DB, error) {
 	retryInterval := time.Second * 3
 
 	for i := range maxRetries {
-		db, err = gorm.Open(postgres.Open(databaseURL), &gorm.Config{
+		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
 			Logger: logger.Default.LogMode(logger.Info),
 		})
 
