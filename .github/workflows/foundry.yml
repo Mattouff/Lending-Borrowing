@@ -10,6 +10,9 @@ env:
 
 jobs:
   check:
+    strategy:
+      fail-fast: true
+
     name: Foundry project
     runs-on: ubuntu-latest
     steps:
@@ -22,19 +25,19 @@ jobs:
 
       - name: Show Forge version
         run: |
-          forge --version --root ./.github/workflows
+          forge --version
 
       - name: Run Forge fmt
         run: |
-          forge fmt --check --root ./.github/workflows
+          forge fmt --check
         id: fmt
 
       - name: Run Forge build
         run: |
-          forge build --sizes --root ./.github/workflows
+          forge build --sizes
         id: build
 
       - name: Run Forge tests
         run: |
-          forge test -vvv --root ./.github/workflows
+          forge test -vvv
         id: test
