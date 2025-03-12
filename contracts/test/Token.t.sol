@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
 import "forge-std/Test.sol";
 import "../src/Token.sol";
@@ -7,14 +7,14 @@ import "../src/Token.sol";
 contract TokenTest is Test {
     Token public token;
     address public owner;
-    uint256 public initialSupply = 1000 * 10**18; 
+    uint256 public initialSupply = 1000 * 10 ** 18;
 
     function setUp() public {
-        owner = address(this); 
+        owner = address(this);
         token = new Token(initialSupply);
     }
 
-    function testInitialBalance() public view{
+    function testInitialBalance() public view {
         uint256 balance = token.balanceOf(owner);
         assertEq(balance, initialSupply, "Insufficient initial balance");
     }
@@ -26,7 +26,7 @@ contract TokenTest is Test {
 
     function testTransfer() public {
         address receiver = address(0xBEEF);
-        uint256 amount = 100 * 10**18; 
+        uint256 amount = 100 * 10 ** 18;
 
         token.transfer(receiver, amount);
 
@@ -36,7 +36,7 @@ contract TokenTest is Test {
 
     function testApprovalAndTransferFrom() public {
         address spender = address(0xCAFE);
-        uint256 amount = 50 * 10**18;
+        uint256 amount = 50 * 10 ** 18;
 
         token.approve(spender, amount);
         assertEq(token.allowance(owner, spender), amount, "Allocation incorrect");
