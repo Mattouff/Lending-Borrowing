@@ -13,11 +13,13 @@ import { createFileRoute } from '@tanstack/react-router'
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as AuthenticatedRouteImport } from './routes/_authenticated/route'
-import { Route as AuthenticatedIndexImport } from './routes/_authenticated/index'
+import { Route as ExploreRouteImport } from './routes/explore/route'
+import { Route as ExploreIndexImport } from './routes/explore/index'
 import { Route as authSignInImport } from './routes/(auth)/sign-in'
 import { Route as authOtpImport } from './routes/(auth)/otp'
 import { Route as auth500Import } from './routes/(auth)/500'
+import { Route as ExploreUserIndexImport } from './routes/explore/user/index'
+import { Route as ExploreAllIndexImport } from './routes/explore/all/index'
 
 // Create Virtual Routes
 
@@ -31,48 +33,39 @@ const authSignIn2LazyImport = createFileRoute('/(auth)/sign-in-2')()
 const authForgotPasswordLazyImport = createFileRoute(
   '/(auth)/forgot-password',
 )()
-const AuthenticatedSettingsRouteLazyImport = createFileRoute(
-  '/_authenticated/settings',
+const ExploreSettingsRouteLazyImport = createFileRoute('/explore/settings')()
+const ExploreTasksIndexLazyImport = createFileRoute('/explore/tasks/')()
+const ExploreSettingsIndexLazyImport = createFileRoute('/explore/settings/')()
+const ExploreHelpCenterIndexLazyImport = createFileRoute(
+  '/explore/help-center/',
 )()
-const AuthenticatedTasksIndexLazyImport = createFileRoute(
-  '/_authenticated/tasks/',
+const ExploreChatsIndexLazyImport = createFileRoute('/explore/chats/')()
+const ExploreAppsIndexLazyImport = createFileRoute('/explore/apps/')()
+const ExploreSettingsNotificationsLazyImport = createFileRoute(
+  '/explore/settings/notifications',
 )()
-const AuthenticatedSettingsIndexLazyImport = createFileRoute(
-  '/_authenticated/settings/',
+const ExploreSettingsDisplayLazyImport = createFileRoute(
+  '/explore/settings/display',
 )()
-const AuthenticatedHelpCenterIndexLazyImport = createFileRoute(
-  '/_authenticated/help-center/',
+const ExploreSettingsAppearanceLazyImport = createFileRoute(
+  '/explore/settings/appearance',
 )()
-const AuthenticatedChatsIndexLazyImport = createFileRoute(
-  '/_authenticated/chats/',
-)()
-const AuthenticatedAppsIndexLazyImport = createFileRoute(
-  '/_authenticated/apps/',
-)()
-const AuthenticatedSettingsNotificationsLazyImport = createFileRoute(
-  '/_authenticated/settings/notifications',
-)()
-const AuthenticatedSettingsDisplayLazyImport = createFileRoute(
-  '/_authenticated/settings/display',
-)()
-const AuthenticatedSettingsAppearanceLazyImport = createFileRoute(
-  '/_authenticated/settings/appearance',
-)()
-const AuthenticatedSettingsAccountLazyImport = createFileRoute(
-  '/_authenticated/settings/account',
+const ExploreSettingsAccountLazyImport = createFileRoute(
+  '/explore/settings/account',
 )()
 
 // Create/Update Routes
 
-const AuthenticatedRouteRoute = AuthenticatedRouteImport.update({
-  id: '/_authenticated',
+const ExploreRouteRoute = ExploreRouteImport.update({
+  id: '/explore',
+  path: '/explore',
   getParentRoute: () => rootRoute,
 } as any)
 
-const AuthenticatedIndexRoute = AuthenticatedIndexImport.update({
+const ExploreIndexRoute = ExploreIndexImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AuthenticatedRouteRoute,
+  getParentRoute: () => ExploreRouteRoute,
 } as any)
 
 const errors503LazyRoute = errors503LazyImport
@@ -141,14 +134,13 @@ const authForgotPasswordLazyRoute = authForgotPasswordLazyImport
     import('./routes/(auth)/forgot-password.lazy').then((d) => d.Route),
   )
 
-const AuthenticatedSettingsRouteLazyRoute =
-  AuthenticatedSettingsRouteLazyImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any).lazy(() =>
-    import('./routes/_authenticated/settings/route.lazy').then((d) => d.Route),
-  )
+const ExploreSettingsRouteLazyRoute = ExploreSettingsRouteLazyImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => ExploreRouteRoute,
+} as any).lazy(() =>
+  import('./routes/explore/settings/route.lazy').then((d) => d.Route),
+)
 
 const authSignInRoute = authSignInImport.update({
   id: '/(auth)/sign-in',
@@ -168,107 +160,107 @@ const auth500Route = auth500Import.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const AuthenticatedTasksIndexLazyRoute =
-  AuthenticatedTasksIndexLazyImport.update({
-    id: '/tasks/',
-    path: '/tasks/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any).lazy(() =>
-    import('./routes/_authenticated/tasks/index.lazy').then((d) => d.Route),
-  )
-
-const AuthenticatedSettingsIndexLazyRoute =
-  AuthenticatedSettingsIndexLazyImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedSettingsRouteLazyRoute,
-  } as any).lazy(() =>
-    import('./routes/_authenticated/settings/index.lazy').then((d) => d.Route),
-  )
-
-const AuthenticatedHelpCenterIndexLazyRoute =
-  AuthenticatedHelpCenterIndexLazyImport.update({
-    id: '/help-center/',
-    path: '/help-center/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any).lazy(() =>
-    import('./routes/_authenticated/help-center/index.lazy').then(
-      (d) => d.Route,
-    ),
-  )
-
-const AuthenticatedChatsIndexLazyRoute =
-  AuthenticatedChatsIndexLazyImport.update({
-    id: '/chats/',
-    path: '/chats/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any).lazy(() =>
-    import('./routes/_authenticated/chats/index.lazy').then((d) => d.Route),
-  )
-
-const AuthenticatedAppsIndexLazyRoute = AuthenticatedAppsIndexLazyImport.update(
-  {
-    id: '/apps/',
-    path: '/apps/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any,
-).lazy(() =>
-  import('./routes/_authenticated/apps/index.lazy').then((d) => d.Route),
+const ExploreTasksIndexLazyRoute = ExploreTasksIndexLazyImport.update({
+  id: '/tasks/',
+  path: '/tasks/',
+  getParentRoute: () => ExploreRouteRoute,
+} as any).lazy(() =>
+  import('./routes/explore/tasks/index.lazy').then((d) => d.Route),
 )
 
-const AuthenticatedSettingsNotificationsLazyRoute =
-  AuthenticatedSettingsNotificationsLazyImport.update({
+const ExploreSettingsIndexLazyRoute = ExploreSettingsIndexLazyImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ExploreSettingsRouteLazyRoute,
+} as any).lazy(() =>
+  import('./routes/explore/settings/index.lazy').then((d) => d.Route),
+)
+
+const ExploreHelpCenterIndexLazyRoute = ExploreHelpCenterIndexLazyImport.update(
+  {
+    id: '/help-center/',
+    path: '/help-center/',
+    getParentRoute: () => ExploreRouteRoute,
+  } as any,
+).lazy(() =>
+  import('./routes/explore/help-center/index.lazy').then((d) => d.Route),
+)
+
+const ExploreChatsIndexLazyRoute = ExploreChatsIndexLazyImport.update({
+  id: '/chats/',
+  path: '/chats/',
+  getParentRoute: () => ExploreRouteRoute,
+} as any).lazy(() =>
+  import('./routes/explore/chats/index.lazy').then((d) => d.Route),
+)
+
+const ExploreAppsIndexLazyRoute = ExploreAppsIndexLazyImport.update({
+  id: '/apps/',
+  path: '/apps/',
+  getParentRoute: () => ExploreRouteRoute,
+} as any).lazy(() =>
+  import('./routes/explore/apps/index.lazy').then((d) => d.Route),
+)
+
+const ExploreUserIndexRoute = ExploreUserIndexImport.update({
+  id: '/user/',
+  path: '/user/',
+  getParentRoute: () => ExploreRouteRoute,
+} as any)
+
+const ExploreAllIndexRoute = ExploreAllIndexImport.update({
+  id: '/all/',
+  path: '/all/',
+  getParentRoute: () => ExploreRouteRoute,
+} as any)
+
+const ExploreSettingsNotificationsLazyRoute =
+  ExploreSettingsNotificationsLazyImport.update({
     id: '/notifications',
     path: '/notifications',
-    getParentRoute: () => AuthenticatedSettingsRouteLazyRoute,
+    getParentRoute: () => ExploreSettingsRouteLazyRoute,
   } as any).lazy(() =>
-    import('./routes/_authenticated/settings/notifications.lazy').then(
-      (d) => d.Route,
-    ),
+    import('./routes/explore/settings/notifications.lazy').then((d) => d.Route),
   )
 
-const AuthenticatedSettingsDisplayLazyRoute =
-  AuthenticatedSettingsDisplayLazyImport.update({
+const ExploreSettingsDisplayLazyRoute = ExploreSettingsDisplayLazyImport.update(
+  {
     id: '/display',
     path: '/display',
-    getParentRoute: () => AuthenticatedSettingsRouteLazyRoute,
-  } as any).lazy(() =>
-    import('./routes/_authenticated/settings/display.lazy').then(
-      (d) => d.Route,
-    ),
-  )
+    getParentRoute: () => ExploreSettingsRouteLazyRoute,
+  } as any,
+).lazy(() =>
+  import('./routes/explore/settings/display.lazy').then((d) => d.Route),
+)
 
-const AuthenticatedSettingsAppearanceLazyRoute =
-  AuthenticatedSettingsAppearanceLazyImport.update({
+const ExploreSettingsAppearanceLazyRoute =
+  ExploreSettingsAppearanceLazyImport.update({
     id: '/appearance',
     path: '/appearance',
-    getParentRoute: () => AuthenticatedSettingsRouteLazyRoute,
+    getParentRoute: () => ExploreSettingsRouteLazyRoute,
   } as any).lazy(() =>
-    import('./routes/_authenticated/settings/appearance.lazy').then(
-      (d) => d.Route,
-    ),
+    import('./routes/explore/settings/appearance.lazy').then((d) => d.Route),
   )
 
-const AuthenticatedSettingsAccountLazyRoute =
-  AuthenticatedSettingsAccountLazyImport.update({
+const ExploreSettingsAccountLazyRoute = ExploreSettingsAccountLazyImport.update(
+  {
     id: '/account',
     path: '/account',
-    getParentRoute: () => AuthenticatedSettingsRouteLazyRoute,
-  } as any).lazy(() =>
-    import('./routes/_authenticated/settings/account.lazy').then(
-      (d) => d.Route,
-    ),
-  )
+    getParentRoute: () => ExploreSettingsRouteLazyRoute,
+  } as any,
+).lazy(() =>
+  import('./routes/explore/settings/account.lazy').then((d) => d.Route),
+)
 
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof AuthenticatedRouteImport
+    '/explore': {
+      id: '/explore'
+      path: '/explore'
+      fullPath: '/explore'
+      preLoaderRoute: typeof ExploreRouteImport
       parentRoute: typeof rootRoute
     }
     '/(auth)/500': {
@@ -292,12 +284,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authSignInImport
       parentRoute: typeof rootRoute
     }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
+    '/explore/settings': {
+      id: '/explore/settings'
       path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteLazyImport
-      parentRoute: typeof AuthenticatedRouteImport
+      fullPath: '/explore/settings'
+      preLoaderRoute: typeof ExploreSettingsRouteLazyImport
+      parentRoute: typeof ExploreRouteImport
     }
     '/(auth)/forgot-password': {
       id: '/(auth)/forgot-password'
@@ -355,135 +347,150 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof errors503LazyImport
       parentRoute: typeof rootRoute
     }
-    '/_authenticated/': {
-      id: '/_authenticated/'
+    '/explore/': {
+      id: '/explore/'
       path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedIndexImport
-      parentRoute: typeof AuthenticatedRouteImport
+      fullPath: '/explore/'
+      preLoaderRoute: typeof ExploreIndexImport
+      parentRoute: typeof ExploreRouteImport
     }
-    '/_authenticated/settings/account': {
-      id: '/_authenticated/settings/account'
+    '/explore/settings/account': {
+      id: '/explore/settings/account'
       path: '/account'
-      fullPath: '/settings/account'
-      preLoaderRoute: typeof AuthenticatedSettingsAccountLazyImport
-      parentRoute: typeof AuthenticatedSettingsRouteLazyImport
+      fullPath: '/explore/settings/account'
+      preLoaderRoute: typeof ExploreSettingsAccountLazyImport
+      parentRoute: typeof ExploreSettingsRouteLazyImport
     }
-    '/_authenticated/settings/appearance': {
-      id: '/_authenticated/settings/appearance'
+    '/explore/settings/appearance': {
+      id: '/explore/settings/appearance'
       path: '/appearance'
-      fullPath: '/settings/appearance'
-      preLoaderRoute: typeof AuthenticatedSettingsAppearanceLazyImport
-      parentRoute: typeof AuthenticatedSettingsRouteLazyImport
+      fullPath: '/explore/settings/appearance'
+      preLoaderRoute: typeof ExploreSettingsAppearanceLazyImport
+      parentRoute: typeof ExploreSettingsRouteLazyImport
     }
-    '/_authenticated/settings/display': {
-      id: '/_authenticated/settings/display'
+    '/explore/settings/display': {
+      id: '/explore/settings/display'
       path: '/display'
-      fullPath: '/settings/display'
-      preLoaderRoute: typeof AuthenticatedSettingsDisplayLazyImport
-      parentRoute: typeof AuthenticatedSettingsRouteLazyImport
+      fullPath: '/explore/settings/display'
+      preLoaderRoute: typeof ExploreSettingsDisplayLazyImport
+      parentRoute: typeof ExploreSettingsRouteLazyImport
     }
-    '/_authenticated/settings/notifications': {
-      id: '/_authenticated/settings/notifications'
+    '/explore/settings/notifications': {
+      id: '/explore/settings/notifications'
       path: '/notifications'
-      fullPath: '/settings/notifications'
-      preLoaderRoute: typeof AuthenticatedSettingsNotificationsLazyImport
-      parentRoute: typeof AuthenticatedSettingsRouteLazyImport
+      fullPath: '/explore/settings/notifications'
+      preLoaderRoute: typeof ExploreSettingsNotificationsLazyImport
+      parentRoute: typeof ExploreSettingsRouteLazyImport
     }
-    '/_authenticated/apps/': {
-      id: '/_authenticated/apps/'
+    '/explore/all/': {
+      id: '/explore/all/'
+      path: '/all'
+      fullPath: '/explore/all'
+      preLoaderRoute: typeof ExploreAllIndexImport
+      parentRoute: typeof ExploreRouteImport
+    }
+    '/explore/user/': {
+      id: '/explore/user/'
+      path: '/user'
+      fullPath: '/explore/user'
+      preLoaderRoute: typeof ExploreUserIndexImport
+      parentRoute: typeof ExploreRouteImport
+    }
+    '/explore/apps/': {
+      id: '/explore/apps/'
       path: '/apps'
-      fullPath: '/apps'
-      preLoaderRoute: typeof AuthenticatedAppsIndexLazyImport
-      parentRoute: typeof AuthenticatedRouteImport
+      fullPath: '/explore/apps'
+      preLoaderRoute: typeof ExploreAppsIndexLazyImport
+      parentRoute: typeof ExploreRouteImport
     }
-    '/_authenticated/chats/': {
-      id: '/_authenticated/chats/'
+    '/explore/chats/': {
+      id: '/explore/chats/'
       path: '/chats'
-      fullPath: '/chats'
-      preLoaderRoute: typeof AuthenticatedChatsIndexLazyImport
-      parentRoute: typeof AuthenticatedRouteImport
+      fullPath: '/explore/chats'
+      preLoaderRoute: typeof ExploreChatsIndexLazyImport
+      parentRoute: typeof ExploreRouteImport
     }
-    '/_authenticated/help-center/': {
-      id: '/_authenticated/help-center/'
+    '/explore/help-center/': {
+      id: '/explore/help-center/'
       path: '/help-center'
-      fullPath: '/help-center'
-      preLoaderRoute: typeof AuthenticatedHelpCenterIndexLazyImport
-      parentRoute: typeof AuthenticatedRouteImport
+      fullPath: '/explore/help-center'
+      preLoaderRoute: typeof ExploreHelpCenterIndexLazyImport
+      parentRoute: typeof ExploreRouteImport
     }
-    '/_authenticated/settings/': {
-      id: '/_authenticated/settings/'
+    '/explore/settings/': {
+      id: '/explore/settings/'
       path: '/'
-      fullPath: '/settings/'
-      preLoaderRoute: typeof AuthenticatedSettingsIndexLazyImport
-      parentRoute: typeof AuthenticatedSettingsRouteLazyImport
+      fullPath: '/explore/settings/'
+      preLoaderRoute: typeof ExploreSettingsIndexLazyImport
+      parentRoute: typeof ExploreSettingsRouteLazyImport
     }
-    '/_authenticated/tasks/': {
-      id: '/_authenticated/tasks/'
+    '/explore/tasks/': {
+      id: '/explore/tasks/'
       path: '/tasks'
-      fullPath: '/tasks'
-      preLoaderRoute: typeof AuthenticatedTasksIndexLazyImport
-      parentRoute: typeof AuthenticatedRouteImport
+      fullPath: '/explore/tasks'
+      preLoaderRoute: typeof ExploreTasksIndexLazyImport
+      parentRoute: typeof ExploreRouteImport
     }
   }
 }
 
 // Create and export the route tree
 
-interface AuthenticatedSettingsRouteLazyRouteChildren {
-  AuthenticatedSettingsAccountLazyRoute: typeof AuthenticatedSettingsAccountLazyRoute
-  AuthenticatedSettingsAppearanceLazyRoute: typeof AuthenticatedSettingsAppearanceLazyRoute
-  AuthenticatedSettingsDisplayLazyRoute: typeof AuthenticatedSettingsDisplayLazyRoute
-  AuthenticatedSettingsNotificationsLazyRoute: typeof AuthenticatedSettingsNotificationsLazyRoute
-  AuthenticatedSettingsIndexLazyRoute: typeof AuthenticatedSettingsIndexLazyRoute
+interface ExploreSettingsRouteLazyRouteChildren {
+  ExploreSettingsAccountLazyRoute: typeof ExploreSettingsAccountLazyRoute
+  ExploreSettingsAppearanceLazyRoute: typeof ExploreSettingsAppearanceLazyRoute
+  ExploreSettingsDisplayLazyRoute: typeof ExploreSettingsDisplayLazyRoute
+  ExploreSettingsNotificationsLazyRoute: typeof ExploreSettingsNotificationsLazyRoute
+  ExploreSettingsIndexLazyRoute: typeof ExploreSettingsIndexLazyRoute
 }
 
-const AuthenticatedSettingsRouteLazyRouteChildren: AuthenticatedSettingsRouteLazyRouteChildren =
+const ExploreSettingsRouteLazyRouteChildren: ExploreSettingsRouteLazyRouteChildren =
   {
-    AuthenticatedSettingsAccountLazyRoute:
-      AuthenticatedSettingsAccountLazyRoute,
-    AuthenticatedSettingsAppearanceLazyRoute:
-      AuthenticatedSettingsAppearanceLazyRoute,
-    AuthenticatedSettingsDisplayLazyRoute:
-      AuthenticatedSettingsDisplayLazyRoute,
-    AuthenticatedSettingsNotificationsLazyRoute:
-      AuthenticatedSettingsNotificationsLazyRoute,
-    AuthenticatedSettingsIndexLazyRoute: AuthenticatedSettingsIndexLazyRoute,
+    ExploreSettingsAccountLazyRoute: ExploreSettingsAccountLazyRoute,
+    ExploreSettingsAppearanceLazyRoute: ExploreSettingsAppearanceLazyRoute,
+    ExploreSettingsDisplayLazyRoute: ExploreSettingsDisplayLazyRoute,
+    ExploreSettingsNotificationsLazyRoute:
+      ExploreSettingsNotificationsLazyRoute,
+    ExploreSettingsIndexLazyRoute: ExploreSettingsIndexLazyRoute,
   }
 
-const AuthenticatedSettingsRouteLazyRouteWithChildren =
-  AuthenticatedSettingsRouteLazyRoute._addFileChildren(
-    AuthenticatedSettingsRouteLazyRouteChildren,
+const ExploreSettingsRouteLazyRouteWithChildren =
+  ExploreSettingsRouteLazyRoute._addFileChildren(
+    ExploreSettingsRouteLazyRouteChildren,
   )
 
-interface AuthenticatedRouteRouteChildren {
-  AuthenticatedSettingsRouteLazyRoute: typeof AuthenticatedSettingsRouteLazyRouteWithChildren
-  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
-  AuthenticatedAppsIndexLazyRoute: typeof AuthenticatedAppsIndexLazyRoute
-  AuthenticatedChatsIndexLazyRoute: typeof AuthenticatedChatsIndexLazyRoute
-  AuthenticatedHelpCenterIndexLazyRoute: typeof AuthenticatedHelpCenterIndexLazyRoute
-  AuthenticatedTasksIndexLazyRoute: typeof AuthenticatedTasksIndexLazyRoute
+interface ExploreRouteRouteChildren {
+  ExploreSettingsRouteLazyRoute: typeof ExploreSettingsRouteLazyRouteWithChildren
+  ExploreIndexRoute: typeof ExploreIndexRoute
+  ExploreAllIndexRoute: typeof ExploreAllIndexRoute
+  ExploreUserIndexRoute: typeof ExploreUserIndexRoute
+  ExploreAppsIndexLazyRoute: typeof ExploreAppsIndexLazyRoute
+  ExploreChatsIndexLazyRoute: typeof ExploreChatsIndexLazyRoute
+  ExploreHelpCenterIndexLazyRoute: typeof ExploreHelpCenterIndexLazyRoute
+  ExploreTasksIndexLazyRoute: typeof ExploreTasksIndexLazyRoute
 }
 
-const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedSettingsRouteLazyRoute:
-    AuthenticatedSettingsRouteLazyRouteWithChildren,
-  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
-  AuthenticatedAppsIndexLazyRoute: AuthenticatedAppsIndexLazyRoute,
-  AuthenticatedChatsIndexLazyRoute: AuthenticatedChatsIndexLazyRoute,
-  AuthenticatedHelpCenterIndexLazyRoute: AuthenticatedHelpCenterIndexLazyRoute,
-  AuthenticatedTasksIndexLazyRoute: AuthenticatedTasksIndexLazyRoute,
+const ExploreRouteRouteChildren: ExploreRouteRouteChildren = {
+  ExploreSettingsRouteLazyRoute: ExploreSettingsRouteLazyRouteWithChildren,
+  ExploreIndexRoute: ExploreIndexRoute,
+  ExploreAllIndexRoute: ExploreAllIndexRoute,
+  ExploreUserIndexRoute: ExploreUserIndexRoute,
+  ExploreAppsIndexLazyRoute: ExploreAppsIndexLazyRoute,
+  ExploreChatsIndexLazyRoute: ExploreChatsIndexLazyRoute,
+  ExploreHelpCenterIndexLazyRoute: ExploreHelpCenterIndexLazyRoute,
+  ExploreTasksIndexLazyRoute: ExploreTasksIndexLazyRoute,
 }
 
-const AuthenticatedRouteRouteWithChildren =
-  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+const ExploreRouteRouteWithChildren = ExploreRouteRoute._addFileChildren(
+  ExploreRouteRouteChildren,
+)
 
 export interface FileRoutesByFullPath {
-  '': typeof AuthenticatedRouteRouteWithChildren
+  '/explore': typeof ExploreRouteRouteWithChildren
   '/500': typeof errors500LazyRoute
   '/otp': typeof authOtpRoute
   '/sign-in': typeof authSignInRoute
-  '/settings': typeof AuthenticatedSettingsRouteLazyRouteWithChildren
+  '/explore/settings': typeof ExploreSettingsRouteLazyRouteWithChildren
   '/forgot-password': typeof authForgotPasswordLazyRoute
   '/sign-in-2': typeof authSignIn2LazyRoute
   '/sign-up': typeof authSignUpLazyRoute
@@ -491,16 +498,18 @@ export interface FileRoutesByFullPath {
   '/403': typeof errors403LazyRoute
   '/404': typeof errors404LazyRoute
   '/503': typeof errors503LazyRoute
-  '/': typeof AuthenticatedIndexRoute
-  '/settings/account': typeof AuthenticatedSettingsAccountLazyRoute
-  '/settings/appearance': typeof AuthenticatedSettingsAppearanceLazyRoute
-  '/settings/display': typeof AuthenticatedSettingsDisplayLazyRoute
-  '/settings/notifications': typeof AuthenticatedSettingsNotificationsLazyRoute
-  '/apps': typeof AuthenticatedAppsIndexLazyRoute
-  '/chats': typeof AuthenticatedChatsIndexLazyRoute
-  '/help-center': typeof AuthenticatedHelpCenterIndexLazyRoute
-  '/settings/': typeof AuthenticatedSettingsIndexLazyRoute
-  '/tasks': typeof AuthenticatedTasksIndexLazyRoute
+  '/explore/': typeof ExploreIndexRoute
+  '/explore/settings/account': typeof ExploreSettingsAccountLazyRoute
+  '/explore/settings/appearance': typeof ExploreSettingsAppearanceLazyRoute
+  '/explore/settings/display': typeof ExploreSettingsDisplayLazyRoute
+  '/explore/settings/notifications': typeof ExploreSettingsNotificationsLazyRoute
+  '/explore/all': typeof ExploreAllIndexRoute
+  '/explore/user': typeof ExploreUserIndexRoute
+  '/explore/apps': typeof ExploreAppsIndexLazyRoute
+  '/explore/chats': typeof ExploreChatsIndexLazyRoute
+  '/explore/help-center': typeof ExploreHelpCenterIndexLazyRoute
+  '/explore/settings/': typeof ExploreSettingsIndexLazyRoute
+  '/explore/tasks': typeof ExploreTasksIndexLazyRoute
 }
 
 export interface FileRoutesByTo {
@@ -514,25 +523,27 @@ export interface FileRoutesByTo {
   '/403': typeof errors403LazyRoute
   '/404': typeof errors404LazyRoute
   '/503': typeof errors503LazyRoute
-  '/': typeof AuthenticatedIndexRoute
-  '/settings/account': typeof AuthenticatedSettingsAccountLazyRoute
-  '/settings/appearance': typeof AuthenticatedSettingsAppearanceLazyRoute
-  '/settings/display': typeof AuthenticatedSettingsDisplayLazyRoute
-  '/settings/notifications': typeof AuthenticatedSettingsNotificationsLazyRoute
-  '/apps': typeof AuthenticatedAppsIndexLazyRoute
-  '/chats': typeof AuthenticatedChatsIndexLazyRoute
-  '/help-center': typeof AuthenticatedHelpCenterIndexLazyRoute
-  '/settings': typeof AuthenticatedSettingsIndexLazyRoute
-  '/tasks': typeof AuthenticatedTasksIndexLazyRoute
+  '/explore': typeof ExploreIndexRoute
+  '/explore/settings/account': typeof ExploreSettingsAccountLazyRoute
+  '/explore/settings/appearance': typeof ExploreSettingsAppearanceLazyRoute
+  '/explore/settings/display': typeof ExploreSettingsDisplayLazyRoute
+  '/explore/settings/notifications': typeof ExploreSettingsNotificationsLazyRoute
+  '/explore/all': typeof ExploreAllIndexRoute
+  '/explore/user': typeof ExploreUserIndexRoute
+  '/explore/apps': typeof ExploreAppsIndexLazyRoute
+  '/explore/chats': typeof ExploreChatsIndexLazyRoute
+  '/explore/help-center': typeof ExploreHelpCenterIndexLazyRoute
+  '/explore/settings': typeof ExploreSettingsIndexLazyRoute
+  '/explore/tasks': typeof ExploreTasksIndexLazyRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
-  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/explore': typeof ExploreRouteRouteWithChildren
   '/(auth)/500': typeof auth500Route
   '/(auth)/otp': typeof authOtpRoute
   '/(auth)/sign-in': typeof authSignInRoute
-  '/_authenticated/settings': typeof AuthenticatedSettingsRouteLazyRouteWithChildren
+  '/explore/settings': typeof ExploreSettingsRouteLazyRouteWithChildren
   '/(auth)/forgot-password': typeof authForgotPasswordLazyRoute
   '/(auth)/sign-in-2': typeof authSignIn2LazyRoute
   '/(auth)/sign-up': typeof authSignUpLazyRoute
@@ -541,26 +552,28 @@ export interface FileRoutesById {
   '/(errors)/404': typeof errors404LazyRoute
   '/(errors)/500': typeof errors500LazyRoute
   '/(errors)/503': typeof errors503LazyRoute
-  '/_authenticated/': typeof AuthenticatedIndexRoute
-  '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountLazyRoute
-  '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceLazyRoute
-  '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayLazyRoute
-  '/_authenticated/settings/notifications': typeof AuthenticatedSettingsNotificationsLazyRoute
-  '/_authenticated/apps/': typeof AuthenticatedAppsIndexLazyRoute
-  '/_authenticated/chats/': typeof AuthenticatedChatsIndexLazyRoute
-  '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexLazyRoute
-  '/_authenticated/settings/': typeof AuthenticatedSettingsIndexLazyRoute
-  '/_authenticated/tasks/': typeof AuthenticatedTasksIndexLazyRoute
+  '/explore/': typeof ExploreIndexRoute
+  '/explore/settings/account': typeof ExploreSettingsAccountLazyRoute
+  '/explore/settings/appearance': typeof ExploreSettingsAppearanceLazyRoute
+  '/explore/settings/display': typeof ExploreSettingsDisplayLazyRoute
+  '/explore/settings/notifications': typeof ExploreSettingsNotificationsLazyRoute
+  '/explore/all/': typeof ExploreAllIndexRoute
+  '/explore/user/': typeof ExploreUserIndexRoute
+  '/explore/apps/': typeof ExploreAppsIndexLazyRoute
+  '/explore/chats/': typeof ExploreChatsIndexLazyRoute
+  '/explore/help-center/': typeof ExploreHelpCenterIndexLazyRoute
+  '/explore/settings/': typeof ExploreSettingsIndexLazyRoute
+  '/explore/tasks/': typeof ExploreTasksIndexLazyRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | ''
+    | '/explore'
     | '/500'
     | '/otp'
     | '/sign-in'
-    | '/settings'
+    | '/explore/settings'
     | '/forgot-password'
     | '/sign-in-2'
     | '/sign-up'
@@ -568,16 +581,18 @@ export interface FileRouteTypes {
     | '/403'
     | '/404'
     | '/503'
-    | '/'
-    | '/settings/account'
-    | '/settings/appearance'
-    | '/settings/display'
-    | '/settings/notifications'
-    | '/apps'
-    | '/chats'
-    | '/help-center'
-    | '/settings/'
-    | '/tasks'
+    | '/explore/'
+    | '/explore/settings/account'
+    | '/explore/settings/appearance'
+    | '/explore/settings/display'
+    | '/explore/settings/notifications'
+    | '/explore/all'
+    | '/explore/user'
+    | '/explore/apps'
+    | '/explore/chats'
+    | '/explore/help-center'
+    | '/explore/settings/'
+    | '/explore/tasks'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/500'
@@ -590,23 +605,25 @@ export interface FileRouteTypes {
     | '/403'
     | '/404'
     | '/503'
-    | '/'
-    | '/settings/account'
-    | '/settings/appearance'
-    | '/settings/display'
-    | '/settings/notifications'
-    | '/apps'
-    | '/chats'
-    | '/help-center'
-    | '/settings'
-    | '/tasks'
+    | '/explore'
+    | '/explore/settings/account'
+    | '/explore/settings/appearance'
+    | '/explore/settings/display'
+    | '/explore/settings/notifications'
+    | '/explore/all'
+    | '/explore/user'
+    | '/explore/apps'
+    | '/explore/chats'
+    | '/explore/help-center'
+    | '/explore/settings'
+    | '/explore/tasks'
   id:
     | '__root__'
-    | '/_authenticated'
+    | '/explore'
     | '/(auth)/500'
     | '/(auth)/otp'
     | '/(auth)/sign-in'
-    | '/_authenticated/settings'
+    | '/explore/settings'
     | '/(auth)/forgot-password'
     | '/(auth)/sign-in-2'
     | '/(auth)/sign-up'
@@ -615,21 +632,23 @@ export interface FileRouteTypes {
     | '/(errors)/404'
     | '/(errors)/500'
     | '/(errors)/503'
-    | '/_authenticated/'
-    | '/_authenticated/settings/account'
-    | '/_authenticated/settings/appearance'
-    | '/_authenticated/settings/display'
-    | '/_authenticated/settings/notifications'
-    | '/_authenticated/apps/'
-    | '/_authenticated/chats/'
-    | '/_authenticated/help-center/'
-    | '/_authenticated/settings/'
-    | '/_authenticated/tasks/'
+    | '/explore/'
+    | '/explore/settings/account'
+    | '/explore/settings/appearance'
+    | '/explore/settings/display'
+    | '/explore/settings/notifications'
+    | '/explore/all/'
+    | '/explore/user/'
+    | '/explore/apps/'
+    | '/explore/chats/'
+    | '/explore/help-center/'
+    | '/explore/settings/'
+    | '/explore/tasks/'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
-  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  ExploreRouteRoute: typeof ExploreRouteRouteWithChildren
   auth500Route: typeof auth500Route
   authOtpRoute: typeof authOtpRoute
   authSignInRoute: typeof authSignInRoute
@@ -644,7 +663,7 @@ export interface RootRouteChildren {
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  ExploreRouteRoute: ExploreRouteRouteWithChildren,
   auth500Route: auth500Route,
   authOtpRoute: authOtpRoute,
   authSignInRoute: authSignInRoute,
@@ -668,7 +687,7 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/_authenticated",
+        "/explore",
         "/(auth)/500",
         "/(auth)/otp",
         "/(auth)/sign-in",
@@ -682,15 +701,17 @@ export const routeTree = rootRoute
         "/(errors)/503"
       ]
     },
-    "/_authenticated": {
-      "filePath": "_authenticated/route.tsx",
+    "/explore": {
+      "filePath": "explore/route.tsx",
       "children": [
-        "/_authenticated/settings",
-        "/_authenticated/",
-        "/_authenticated/apps/",
-        "/_authenticated/chats/",
-        "/_authenticated/help-center/",
-        "/_authenticated/tasks/"
+        "/explore/settings",
+        "/explore/",
+        "/explore/all/",
+        "/explore/user/",
+        "/explore/apps/",
+        "/explore/chats/",
+        "/explore/help-center/",
+        "/explore/tasks/"
       ]
     },
     "/(auth)/500": {
@@ -702,15 +723,15 @@ export const routeTree = rootRoute
     "/(auth)/sign-in": {
       "filePath": "(auth)/sign-in.tsx"
     },
-    "/_authenticated/settings": {
-      "filePath": "_authenticated/settings/route.lazy.tsx",
-      "parent": "/_authenticated",
+    "/explore/settings": {
+      "filePath": "explore/settings/route.lazy.tsx",
+      "parent": "/explore",
       "children": [
-        "/_authenticated/settings/account",
-        "/_authenticated/settings/appearance",
-        "/_authenticated/settings/display",
-        "/_authenticated/settings/notifications",
-        "/_authenticated/settings/"
+        "/explore/settings/account",
+        "/explore/settings/appearance",
+        "/explore/settings/display",
+        "/explore/settings/notifications",
+        "/explore/settings/"
       ]
     },
     "/(auth)/forgot-password": {
@@ -737,45 +758,53 @@ export const routeTree = rootRoute
     "/(errors)/503": {
       "filePath": "(errors)/503.lazy.tsx"
     },
-    "/_authenticated/": {
-      "filePath": "_authenticated/index.tsx",
-      "parent": "/_authenticated"
+    "/explore/": {
+      "filePath": "explore/index.tsx",
+      "parent": "/explore"
     },
-    "/_authenticated/settings/account": {
-      "filePath": "_authenticated/settings/account.lazy.tsx",
-      "parent": "/_authenticated/settings"
+    "/explore/settings/account": {
+      "filePath": "explore/settings/account.lazy.tsx",
+      "parent": "/explore/settings"
     },
-    "/_authenticated/settings/appearance": {
-      "filePath": "_authenticated/settings/appearance.lazy.tsx",
-      "parent": "/_authenticated/settings"
+    "/explore/settings/appearance": {
+      "filePath": "explore/settings/appearance.lazy.tsx",
+      "parent": "/explore/settings"
     },
-    "/_authenticated/settings/display": {
-      "filePath": "_authenticated/settings/display.lazy.tsx",
-      "parent": "/_authenticated/settings"
+    "/explore/settings/display": {
+      "filePath": "explore/settings/display.lazy.tsx",
+      "parent": "/explore/settings"
     },
-    "/_authenticated/settings/notifications": {
-      "filePath": "_authenticated/settings/notifications.lazy.tsx",
-      "parent": "/_authenticated/settings"
+    "/explore/settings/notifications": {
+      "filePath": "explore/settings/notifications.lazy.tsx",
+      "parent": "/explore/settings"
     },
-    "/_authenticated/apps/": {
-      "filePath": "_authenticated/apps/index.lazy.tsx",
-      "parent": "/_authenticated"
+    "/explore/all/": {
+      "filePath": "explore/all/index.tsx",
+      "parent": "/explore"
     },
-    "/_authenticated/chats/": {
-      "filePath": "_authenticated/chats/index.lazy.tsx",
-      "parent": "/_authenticated"
+    "/explore/user/": {
+      "filePath": "explore/user/index.tsx",
+      "parent": "/explore"
     },
-    "/_authenticated/help-center/": {
-      "filePath": "_authenticated/help-center/index.lazy.tsx",
-      "parent": "/_authenticated"
+    "/explore/apps/": {
+      "filePath": "explore/apps/index.lazy.tsx",
+      "parent": "/explore"
     },
-    "/_authenticated/settings/": {
-      "filePath": "_authenticated/settings/index.lazy.tsx",
-      "parent": "/_authenticated/settings"
+    "/explore/chats/": {
+      "filePath": "explore/chats/index.lazy.tsx",
+      "parent": "/explore"
     },
-    "/_authenticated/tasks/": {
-      "filePath": "_authenticated/tasks/index.lazy.tsx",
-      "parent": "/_authenticated"
+    "/explore/help-center/": {
+      "filePath": "explore/help-center/index.lazy.tsx",
+      "parent": "/explore"
+    },
+    "/explore/settings/": {
+      "filePath": "explore/settings/index.lazy.tsx",
+      "parent": "/explore/settings"
+    },
+    "/explore/tasks/": {
+      "filePath": "explore/tasks/index.lazy.tsx",
+      "parent": "/explore"
     }
   }
 }

@@ -1,4 +1,4 @@
-import { Command, HomeIcon } from 'lucide-react';
+import { Command, HomeIcon, UserIcon } from 'lucide-react';
 import { type SidebarData } from '../types';
 
 export const sidebarData: SidebarData = {
@@ -19,9 +19,14 @@ export const sidebarData: SidebarData = {
       title: 'General',
       items: [
         {
-          title: 'Home',
-          url: '/',
+          title: 'Explore all',
+          url: '/explore/all',
           icon: HomeIcon,
+        },
+        {
+          title: 'User',
+          url: '/explore/user',
+          icon: UserIcon,
         },
       ],
     },
