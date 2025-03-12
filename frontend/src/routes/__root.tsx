@@ -1,30 +1,20 @@
-import { Account } from '@/components/account/Account';
-import { WalletOptions } from '@/config/wallet-options';
-import { createRootRoute, Link, Outlet } from '@tanstack/react-router';
-import { TanStackRouterDevtools } from '@tanstack/router-devtools';
-import { useAccount } from 'wagmi';
+import { Toaster } from '@/components/ui/toaster';
+import GeneralError from '@/features/errors/general-error';
+import NotFoundError from '@/features/errors/not-found-error';
+import { QueryClient } from '@tanstack/react-query';
+import { createRootRouteWithContext, Outlet } from '@tanstack/react-router';
 
-function ConnectWallet() {
-  const { isConnected } = useAccount();
-  if (isConnected) return <Account />;
-  return <WalletOptions />;
-}
-
-export const Route = createRootRoute({
-  component: () => (
-    <>
-      <div className="p-2 flex gap-2">
-        <Link to="/" className="[&.active]:font-bold">
-          Home
-        </Link>{' '}
-        <Link to="/about" className="[&.active]:font-bold">
-          About
-        </Link>
-        <ConnectWallet />
-      </div>
-      <hr />
-      <Outlet />
-      <TanStackRouterDevtools />
-    </>
-  ),
+export const Route = createRootRouteWithContext<{
+  queryClient: QueryClient;
+}>()({
+  component: () => {
+    return (
+      <>
+        <Outlet />
+        <Toaster />
+      </>
+    );
+  },
+  notFoundComponent: NotFoundError,
+  errorComponent: GeneralError,
 });
