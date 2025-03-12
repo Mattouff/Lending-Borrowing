@@ -21,24 +21,24 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
 
       - name: Show Forge version
-        working-directory: ./contracts
+        working-directory: ./.github/workflows
         run: |
           forge --version --root 
 
       - name: Run Forge fmt
-        working-directory: ./contracts
+        working-directory: ./.github/workflows
         run: |
           forge fmt --check --root 
         id: fmt
 
       - name: Run Forge build
-        working-directory: ./contracts
+        working-directory: ./.github/workflows
         run: |
           forge build --sizes --root 
         id: build
 
       - name: Run Forge tests
-        working-directory: ./contracts
+        working-directory: ./.github/workflows
         run: |
           forge test -vvv --root 
         id: test
