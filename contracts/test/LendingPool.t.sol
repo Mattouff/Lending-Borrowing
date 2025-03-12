@@ -14,6 +14,7 @@ contract FailingTransferFromToken is ERC20 {
         _mint(msg.sender, initialSupply);
     }
     /// @dev This function simulates a systematic failure of transferFrom.
+
     function transferFrom(address, address, uint256) public pure override returns (bool) {
         return false;
     }
@@ -43,7 +44,7 @@ contract LendingPoolTest is Test {
     function setUp() public {
         token = new Token(initialSupply);
         lendingPool = new LendingPool(address(token));
-        
+
         token.transfer(user, 100 * 10 ** 18);
     }
 
@@ -65,7 +66,7 @@ contract LendingPoolTest is Test {
 
     function testWithdraw() public {
         uint256 depositAmount = 50 * 10 ** 18;
-        
+
         vm.prank(user);
         token.approve(address(lendingPool), depositAmount);
         vm.prank(user);
@@ -118,7 +119,7 @@ contract LendingPoolTest is Test {
     /// @notice Test simulating a failure in deposit via a failing transferFrom.
     function testDepositFailsWhenTransferFromFails() public {
         FailingTransferFromToken failingToken = new FailingTransferFromToken(initialSupply);
-        
+
         failingToken.transfer(user, 100 * 10 ** 18);
         LendingPool poolWithFailingToken = new LendingPool(address(failingToken));
         uint256 depositAmount = 50 * 10 ** 18;
@@ -132,14 +133,14 @@ contract LendingPoolTest is Test {
     /// @notice Test simulating a failure in withdraw via a failing transfer.
     function testWithdrawFailsWhenTransferFails() public {
         MockFailingToken failingToken = new MockFailingToken(initialSupply);
-        
+
         failingToken.transfer(user, 100 * 10 ** 18);
         LendingPool poolWithFailingToken = new LendingPool(address(failingToken));
         uint256 depositAmount = 50 * 10 ** 18;
         vm.prank(user);
         failingToken.approve(address(poolWithFailingToken), depositAmount);
         vm.prank(user);
-        
+
         poolWithFailingToken.deposit(depositAmount);
 
         vm.prank(user);
@@ -153,13 +154,13 @@ contract LendingPoolTest is Test {
         failingToken.transfer(user, 100 * 10 ** 18);
         LendingPool poolWithFailingToken = new LendingPool(address(failingToken));
         uint256 depositAmount = 50 * 10 ** 18;
-        
+
         vm.prank(user);
         failingToken.approve(address(poolWithFailingToken), depositAmount);
-        
+
         vm.prank(user);
         poolWithFailingToken.deposit(depositAmount);
-        
+
         vm.prank(user);
         vm.expectRevert("Token transfer failed");
         poolWithFailingToken.withdraw(20 * 10 ** 18);
