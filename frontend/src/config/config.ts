@@ -1,13 +1,14 @@
-import { createConfig, http } from 'wagmi';
-import { mainnet, polygon, sepolia } from 'wagmi/chains';
-import { metaMask } from 'wagmi/connectors';
+import { createConfig, http, injected } from 'wagmi';
+import { base, mainnet } from 'wagmi/chains';
+import { metaMask, safe, walletConnect } from 'wagmi/connectors';
+
+const projectId = 'cb9a3d203b35a979abb8e955f45cdab1';
 
 export const config = createConfig({
-  chains: [mainnet, sepolia, polygon],
-  connectors: [metaMask()],
+  chains: [mainnet, base],
+  connectors: [injected(), walletConnect({ projectId }), metaMask(), safe()],
   transports: {
     [mainnet.id]: http(),
-    [sepolia.id]: http(),
-    [polygon.id]: http(),
+    [base.id]: http(),
   },
 });
