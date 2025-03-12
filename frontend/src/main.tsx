@@ -8,6 +8,7 @@ import ReactDOM from 'react-dom/client';
 import { toast } from '@/hooks/use-toast';
 import { handleServerError } from '@/utils/handle-server-error';
 import { WagmiProvider } from 'wagmi';
+import { SimpleKitProvider } from './components/simplekit/simplekit';
 import { config } from './config/config';
 import { FontProvider } from './context/font-context';
 import { ThemeProvider } from './context/theme-context';
@@ -73,9 +74,11 @@ if (!rootElement.innerHTML) {
       <WagmiProvider config={config}>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-            <FontProvider>
-              <RouterProvider router={router} />
-            </FontProvider>
+            <SimpleKitProvider>
+              <FontProvider>
+                <RouterProvider router={router} />
+              </FontProvider>
+            </SimpleKitProvider>
           </ThemeProvider>
         </QueryClientProvider>
       </WagmiProvider>
