@@ -8,8 +8,6 @@ import React from 'react';
 import Global from './pages/all';
 import User from './pages/user';
 
-// 📌 Import des composants Table de shadcn/ui
-
 export default function Source() {
   const location = useLocation();
   const path = getExploreContent(location.pathname);
