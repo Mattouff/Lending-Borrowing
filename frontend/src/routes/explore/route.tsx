@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { createFileRoute, Outlet } from '@tanstack/react-router';
 import Cookies from 'js-cookie';
 
-export const Route = createFileRoute('/_authenticated')({
+export const Route = createFileRoute('/explore')({
   component: RouteComponent,
 });
 

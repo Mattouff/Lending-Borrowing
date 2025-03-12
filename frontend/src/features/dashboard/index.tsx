@@ -1,27 +1,36 @@
 'use client';
 
-// import { wagmiContractConfig } from '@/abi/contract'
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
-// import { Search } from '@/components/search'
-// import { usePinataMetadata } from '@/hooks/pinata'
-import { useAccount, useConnect, useDisconnect, useEnsName } from 'wagmi';
+import { getExploreContent } from '@/lib/links';
+import { useLocation } from '@tanstack/react-router';
+import React from 'react';
+import Global from './pages/all';
+import User from './pages/user';
 
-export default function Certifications() {
-  const { address } = useAccount();
-  const { disconnect } = useDisconnect();
-  const { connect } = useConnect();
-  const { data: ensName } = useEnsName({ address });
+// 📌 Import des composants Table de shadcn/ui
+
+export default function Source() {
+  const location = useLocation();
+  const path = getExploreContent(location.pathname);
+
+  const Content: React.FC = () => {
+    switch (path[0]) {
+      case '/all':
+        return <Global />;
+      case '/user':
+        return <User />;
+      default:
+        return <Global />;
+    }
+  };
 
   return (
     <div>
-      {/* <UsersProvider> */}
-      <Header fixed></Header>
+      <Header fixed path={path[0]} />
       <Main>
-        <div className="mb-2 flex flex-wrap items-center justify-between space-y-2"></div>
+        <Content />
       </Main>
-      {/* <UsersDialogs /> */}
-      {/* </UsersProvider> */}
     </div>
   );
 }
