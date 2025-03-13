@@ -2,7 +2,6 @@ package routes
 
 import (
 	"github.com/Mattouff/Lending-Borrowing/api/controllers"
-
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )

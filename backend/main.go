@@ -32,9 +32,9 @@ func main() {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	if err := database.MigrateDB(db); err != nil {
-		log.Fatalf("Failed to migrate database: %v", err)
-	}
+	// if err := database.MigrateDB(db); err != nil {
+	// 	log.Fatalf("Failed to migrate database: %v", err)
+	// }
 
 	// Initialize Fiber app
 	app := fiber.New(fiber.Config{

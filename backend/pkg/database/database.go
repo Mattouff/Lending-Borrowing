@@ -5,8 +5,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/Mattouff/Lending-Borrowing/internal/models"
-
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -19,7 +17,7 @@ func Connect() (*gorm.DB, error) {
 	dsn := os.Getenv("POSTGRES_URL")
 
 	if dsn == "" {
-		dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=5432 sslmode=require",
+		dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=5432 sslmode=require prefer_simple_protocol=true",
 			os.Getenv("POSTGRES_HOST"),
 			os.Getenv("POSTGRES_USER"),
 			os.Getenv("POSTGRES_PASSWORD"),
@@ -32,6 +30,7 @@ func Connect() (*gorm.DB, error) {
 
 	for i := range maxRetries {
 		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
+			PrepareStmt: false,
 			Logger: logger.Default.LogMode(logger.Info),
 		})
 
@@ -65,9 +64,8 @@ func Connect() (*gorm.DB, error) {
 	return db, nil
 }
 
-func MigrateDB(db *gorm.DB) error {
-	// Auto-migrate all models
-	return db.AutoMigrate(
-		&models.User{},
-	)
-}
+// func MigrateDB(db *gorm.DB) error {
+//     return db.AutoMigrate(&models.User{})
+// }
+
+
