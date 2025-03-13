@@ -34,7 +34,7 @@ FROM scratch
 
 # Copie du binaire, des fichiers de configuration, et de la documentation Swagger.
 COPY --from=build /api/apiserver /
-COPY --from=build /api/.env /
+# COPY --from=build /api/.env /
 #COPY --from=build /api/docs /docs
 
 # Copie des certificats CA.
