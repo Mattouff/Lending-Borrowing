@@ -9,6 +9,12 @@ import "./Token.sol";
 contract LendingPool is ERC20 {
     Token public immutable underlying;
 
+    /// @notice Mapping of user addresses to their lending token amounts.
+    mapping(address => uint256) public lendingBalance;
+
+    /// @notice Total lending tokens across all users.
+    uint256 public totalLending;
+
     /// @notice Constructor for the LendingPool contract.
     /// @param _underlying The address of the underlying token (Token.sol)
     constructor(address _underlying) ERC20("Deposit Token", "dTOKEN") {
@@ -20,6 +26,8 @@ contract LendingPool is ERC20 {
     /// @dev The user must first approve the transfer of tokens to this contract.
     function deposit(uint256 amount) external {
         require(amount > 0, "Amount must be greater than zero");
+        lendingBalance[msg.sender] += amount;
+        totalLending += amount;
 
         bool success = underlying.transferFrom(msg.sender, address(this), amount);
         require(success, "Token transfer failed");
@@ -32,10 +40,20 @@ contract LendingPool is ERC20 {
     function withdraw(uint256 amount) external {
         require(amount > 0, "Amount must be greater than zero");
         require(balanceOf(msg.sender) >= amount, "Insufficient deposit balance");
+        lendingBalance[msg.sender] -= amount;
+        totalLending -= amount;
 
         _burn(msg.sender, amount);
 
         bool success = underlying.transfer(msg.sender, amount);
         require(success, "Token transfer failed");
+    }
+
+    function getLendingToken(address user) external view returns (uint256) {
+        return lendingBalance[user];
+    }
+
+    function getAllLendingToken() external view returns (uint256) {
+        return totalLending;
     }
 }

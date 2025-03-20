@@ -12,14 +12,14 @@ contract MockBorrowingForCollateral {
     function setBorrowedBalance(address user, uint256 amount) external {
         _borrowedBalance[user] = amount;
     }
-    
+
     /// @notice Returns the borrowed balance for a user.
     /// @param user The address of the user.
     /// @return The borrowed balance.
     function getBorrowedBalance(address user) external view returns (uint256) {
         return _borrowedBalance[user];
     }
-    
+
     /// @notice Mimics the public getter in the original Borrowing contract.
     /// @param user The address of the user.
     /// @return The borrowed balance.

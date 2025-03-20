@@ -46,11 +46,10 @@ contract Collateral {
             require(newCollateral * 100 >= borrowed * MIN_COLLATERAL_RATIO, "Collateral ratio too low after withdrawal");
         }
         collateralBalance[msg.sender] = newCollateral;
-        
+
         // Appel bas niveau via .call pour intercepter un revert ou un retour false
-        (bool success, bytes memory returndata) = address(token).call(
-            abi.encodeWithSelector(token.transfer.selector, msg.sender, amount)
-        );
+        (bool success, bytes memory returndata) =
+            address(token).call(abi.encodeWithSelector(token.transfer.selector, msg.sender, amount));
         if (!success) {
             revert("Collateral withdrawal transfer failed");
         }

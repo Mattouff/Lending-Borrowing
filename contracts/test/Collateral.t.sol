@@ -24,7 +24,7 @@ contract CollateralTest is Test {
         token = new Token(initialSupply);
         mockBorrowing = new MockBorrowingForCollateral();
         collateral = new Collateral(address(token), address(mockBorrowing));
-        
+
         token.transfer(user, 200 * 10 ** 18);
     }
 
@@ -86,14 +86,14 @@ contract CollateralTest is Test {
         token.approve(address(collateral), depositAmount);
         vm.prank(user);
         collateral.depositCollateral(depositAmount);
-        
+
         uint256 withdrawAmount = 40 * 10 ** 18;
         vm.prank(user);
         collateral.withdrawCollateral(withdrawAmount);
-        
+
         uint256 remaining = collateral.collateralBalance(user);
         assertEq(remaining, depositAmount - withdrawAmount, "Collateral should be reduced correctly when no borrow");
-        
+
         uint256 userBalance = token.balanceOf(user);
         assertEq(userBalance, 140 * 10 ** 18, "User token balance should be correct after withdrawal with no borrow");
     }
@@ -108,7 +108,7 @@ contract CollateralTest is Test {
 
         mockBorrowing.setBorrowedBalance(user, 100 * 10 ** 18);
 
-        uint256 withdrawAmount = 10 * 10 ** 18; 
+        uint256 withdrawAmount = 10 * 10 ** 18;
         vm.prank(user);
         vm.expectRevert("Collateral ratio too low after withdrawal");
         collateral.withdrawCollateral(withdrawAmount);
@@ -128,7 +128,7 @@ contract CollateralTest is Test {
         token.approve(address(collateral), depositAmount);
         vm.prank(user);
         collateral.depositCollateral(depositAmount);
-        
+
         vm.prank(user);
         vm.expectRevert("Withdrawal exceeds collateral balance");
         collateral.withdrawCollateral(depositAmount + 1);
@@ -138,18 +138,18 @@ contract CollateralTest is Test {
     function testWithdrawCollateralFailsWhenTokenTransferReturnsFalse() public {
         MockFailTransferTokenForCollateral failToken = new MockFailTransferTokenForCollateral(initialSupply);
         Collateral collateralFail = new Collateral(address(failToken), address(mockBorrowing));
-        
+
         failToken.setFailAddress(address(collateralFail));
-        
+
         vm.prank(address(this));
         failToken.transfer(user, 200 * 10 ** 18);
-        
+
         vm.prank(user);
         failToken.approve(address(collateralFail), 100 * 10 ** 18);
-        
+
         vm.prank(user);
         collateralFail.depositCollateral(100 * 10 ** 18);
-        
+
         vm.prank(user);
         vm.expectRevert("Collateral withdrawal transfer failed");
         collateralFail.withdrawCollateral(50 * 10 ** 18);
@@ -163,13 +163,13 @@ contract CollateralTest is Test {
 
     //     vm.prank(address(this));
     //     revertToken.transfer(user, 200 * 10 ** 18);
-        
+
     //     vm.prank(user);
     //     revertToken.approve(address(collateralRevert), 100 * 10 ** 18);
-        
+
     //     vm.prank(user);
     //     collateralRevert.depositCollateral(100 * 10 ** 18);
-        
+
     //     vm.prank(user);
     //     vm.expectRevert("Collateral withdrawal transfer failed");
     //     collateralRevert.withdrawCollateral(50 * 10 ** 18);
