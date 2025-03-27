@@ -18,23 +18,23 @@ contract MockCollateralManager is ICollateralManager, Ownable {
         uint256 liquidationThreshold;
         uint256 liquidationBonus;
     }
-    
+
     // Asset to reserve configuration mapping
     mapping(address => ReserveConfig) private _reserveConfigs;
-    
+
     // Flag to control whether operations revert
     bool private _shouldRevert;
-    
+
     // Flags to control validation results
     bool private _validateBorrowShouldPass;
     bool private _isLiquidationValidShouldPass;
     uint256 private _mockHealthFactor;
-    
+
     // Track calls for testing verification
     uint256 public configureAsCollateralCalls;
     uint256 public validateBorrowCalls;
     uint256 public isLiquidationValidCalls;
-    
+
     // Events
     event ReserveConfigurationChanged(
         address indexed asset, bool isCollateral, uint256 ltv, uint256 liquidationThreshold, uint256 liquidationBonus
@@ -49,7 +49,7 @@ contract MockCollateralManager is ICollateralManager, Ownable {
         _validateBorrowShouldPass = true;
         _isLiquidationValidShouldPass = false;
         _mockHealthFactor = 2 * 1e18; // 2.0, healthy
-        
+
         // Transfer ownership
         if (owner != msg.sender) {
             transferOwnership(owner);
@@ -69,18 +69,18 @@ contract MockCollateralManager is ICollateralManager, Ownable {
         if (_shouldRevert) {
             revert("MockCollateralManager: Forced failure");
         }
-        
+
         configureAsCollateralCalls++;
-        
+
         require(asset != address(0), "MockCollateralManager: Zero asset");
-        
+
         _reserveConfigs[asset] = ReserveConfig({
             isCollateral: isCollateral,
             ltv: ltv,
             liquidationThreshold: liquidationThreshold,
             liquidationBonus: liquidationBonus
         });
-        
+
         emit ReserveConfigurationChanged(asset, isCollateral, ltv, liquidationThreshold, liquidationBonus);
     }
 
@@ -96,7 +96,7 @@ contract MockCollateralManager is ICollateralManager, Ownable {
         if (_shouldRevert) {
             revert("MockCollateralManager: Forced failure");
         }
-        
+
         ReserveConfig memory config = _reserveConfigs[asset];
         return (config.isCollateral, config.ltv, config.liquidationThreshold, config.liquidationBonus);
     }
@@ -108,9 +108,9 @@ contract MockCollateralManager is ICollateralManager, Ownable {
         if (_shouldRevert) {
             revert("MockCollateralManager: Forced failure");
         }
-        
+
         // Increment would make this function non-view, so we don't track this call count
-        
+
         // Return the configured validation result
         return _validateBorrowShouldPass;
     }
@@ -122,9 +122,9 @@ contract MockCollateralManager is ICollateralManager, Ownable {
         if (_shouldRevert) {
             revert("MockCollateralManager: Forced failure");
         }
-        
+
         // Increment would make this function non-view, so we don't track this call count
-        
+
         // Return the configured validation result
         return (_isLiquidationValidShouldPass, _mockHealthFactor);
     }

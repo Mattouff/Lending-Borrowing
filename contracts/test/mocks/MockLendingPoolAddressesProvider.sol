@@ -20,7 +20,7 @@ contract MockLendingPoolAddressesProvider is ILendingPoolAddressesProvider, Owna
     address private _priceOracle;
     address private _collateralManager;
     address private _liquidationManager;
-    
+
     // Flag to control whether operations revert
     bool private _shouldRevert;
 
@@ -42,7 +42,7 @@ contract MockLendingPoolAddressesProvider is ILendingPoolAddressesProvider, Owna
         if (_shouldRevert) {
             revert("MockLendingPoolAddressesProvider: Forced failure");
         }
-        
+
         return _lendingPool;
     }
 
@@ -62,7 +62,7 @@ contract MockLendingPoolAddressesProvider is ILendingPoolAddressesProvider, Owna
         if (_shouldRevert) {
             revert("MockLendingPoolAddressesProvider: Forced failure");
         }
-        
+
         return _lendingPoolCore;
     }
 
@@ -82,7 +82,7 @@ contract MockLendingPoolAddressesProvider is ILendingPoolAddressesProvider, Owna
         if (_shouldRevert) {
             revert("MockLendingPoolAddressesProvider: Forced failure");
         }
-        
+
         return _priceOracle;
     }
 
@@ -102,7 +102,7 @@ contract MockLendingPoolAddressesProvider is ILendingPoolAddressesProvider, Owna
         if (_shouldRevert) {
             revert("MockLendingPoolAddressesProvider: Forced failure");
         }
-        
+
         return _lendingPoolConfigurator;
     }
 
@@ -122,7 +122,7 @@ contract MockLendingPoolAddressesProvider is ILendingPoolAddressesProvider, Owna
         if (_shouldRevert) {
             revert("MockLendingPoolAddressesProvider: Forced failure");
         }
-        
+
         return _lendingPoolDataProvider;
     }
 
@@ -142,7 +142,7 @@ contract MockLendingPoolAddressesProvider is ILendingPoolAddressesProvider, Owna
         if (_shouldRevert) {
             revert("MockLendingPoolAddressesProvider: Forced failure");
         }
-        
+
         return _lendingPoolParametersProvider;
     }
 
@@ -162,7 +162,7 @@ contract MockLendingPoolAddressesProvider is ILendingPoolAddressesProvider, Owna
         if (_shouldRevert) {
             revert("MockLendingPoolAddressesProvider: Forced failure");
         }
-        
+
         return _collateralManager;
     }
 
@@ -182,7 +182,7 @@ contract MockLendingPoolAddressesProvider is ILendingPoolAddressesProvider, Owna
         if (_shouldRevert) {
             revert("MockLendingPoolAddressesProvider: Forced failure");
         }
-        
+
         return _liquidationManager;
     }
 

@@ -13,10 +13,10 @@ import "../../src/interfaces/IPriceOracle.sol";
 contract MockPriceOracle is IPriceOracle, Ownable {
     // Mapping from asset address to price in ETH
     mapping(address => uint256) private _assetPrices;
-    
+
     // ETH/USD price
     uint256 private _ethUsdPrice;
-    
+
     // Flag to control whether operations revert
     bool private _shouldRevert;
 
@@ -25,12 +25,9 @@ contract MockPriceOracle is IPriceOracle, Ownable {
      * @param owner The owner of the oracle
      * @param ethUsdPrice The initial ETH/USD price
      */
-    constructor(
-        address owner,
-        uint256 ethUsdPrice
-    ) Ownable(msg.sender) {
+    constructor(address owner, uint256 ethUsdPrice) Ownable(msg.sender) {
         _ethUsdPrice = ethUsdPrice;
-        
+
         // Transfer ownership
         if (owner != msg.sender) {
             transferOwnership(owner);
@@ -44,7 +41,7 @@ contract MockPriceOracle is IPriceOracle, Ownable {
         if (_shouldRevert) {
             revert("MockPriceOracle: Forced failure");
         }
-        
+
         require(_assetPrices[asset] > 0, "MockPriceOracle: Price not set for asset");
         return _assetPrices[asset];
     }
@@ -56,14 +53,14 @@ contract MockPriceOracle is IPriceOracle, Ownable {
         if (_shouldRevert) {
             revert("MockPriceOracle: Forced failure");
         }
-        
+
         uint256[] memory prices = new uint256[](assets.length);
-        
+
         for (uint256 i = 0; i < assets.length; i++) {
             require(_assetPrices[assets[i]] > 0, "MockPriceOracle: Price not set for asset");
             prices[i] = _assetPrices[assets[i]];
         }
-        
+
         return prices;
     }
 
@@ -80,7 +77,7 @@ contract MockPriceOracle is IPriceOracle, Ownable {
      */
     function setAssetsSources(address[] calldata assets, address[] calldata sources) external override onlyOwner {
         require(assets.length == sources.length, "MockPriceOracle: Arrays length mismatch");
-        
+
         for (uint256 i = 0; i < assets.length; i++) {
             emit AssetSourceUpdated(assets[i], sources[i]);
         }
@@ -101,7 +98,7 @@ contract MockPriceOracle is IPriceOracle, Ownable {
         if (_shouldRevert) {
             revert("MockPriceOracle: Forced failure");
         }
-        
+
         return _ethUsdPrice;
     }
 
@@ -121,7 +118,7 @@ contract MockPriceOracle is IPriceOracle, Ownable {
      */
     function setAssetsPricesDirectly(address[] calldata assets, uint256[] calldata prices) external onlyOwner {
         require(assets.length == prices.length, "MockPriceOracle: Arrays length mismatch");
-        
+
         for (uint256 i = 0; i < assets.length; i++) {
             _assetPrices[assets[i]] = prices[i];
         }

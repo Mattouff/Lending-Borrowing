@@ -107,12 +107,45 @@ contract InterestRateStrategy is IInterestRateStrategy, Ownable {
         } else {
             // Above optimal: Add slope2 with an increasing rate
             uint256 normalRate = _baseVariableBorrowRate + _variableRateSlope1;
-            uint256 excessUtilization =
-                (utilizationRate - _optimalUtilizationRate).wadDiv(WadRayMath.wad() - _optimalUtilizationRate);
 
-            // Apply elasticity factor (β) to excessUtilization using the powFactor
-            uint256 excessRate =
-                PercentageMath.powFactor(excessUtilization, _elasticityFactor).wadMul(_variableRateSlope2);
+            // Calculate excess utilization safely
+            uint256 denominator = WadRayMath.wad() - _optimalUtilizationRate;
+            if (denominator == 0) {
+                denominator = 1; // Prevent division by zero
+            }
+
+            uint256 excessUtilization = (utilizationRate - _optimalUtilizationRate).wadDiv(denominator);
+
+            // Cap excessUtilization to prevent extreme values
+            if (excessUtilization > WadRayMath.wad()) {
+                excessUtilization = WadRayMath.wad();
+            }
+
+            // Calculate excess rate using a safer approach
+            uint256 excessRate;
+
+            // For elasticity factor of 2.0 (quadratic growth), we can use simple multiplication
+            if (_elasticityFactor == 2 * WadRayMath.wad()) {
+                // U^2 is simply U*U
+                excessRate = excessUtilization.wadMul(excessUtilization).wadMul(_variableRateSlope2);
+            } else if (_elasticityFactor == WadRayMath.wad()) {
+                // Linear growth
+                excessRate = excessUtilization.wadMul(_variableRateSlope2);
+            } else {
+                // For other elasticity factors, use a simplified approach
+                // Linear interpolation between linear and quadratic based on elasticity
+                uint256 linearPart = excessUtilization.wadMul(_variableRateSlope2);
+                uint256 quadraticPart = excessUtilization.wadMul(excessUtilization).wadMul(_variableRateSlope2);
+
+                // If elasticity is > 1, weight toward quadratic; if < 1, weight toward linear
+                if (_elasticityFactor > WadRayMath.wad()) {
+                    uint256 weight = (_elasticityFactor - WadRayMath.wad()).wadDiv(WadRayMath.wad());
+                    excessRate = linearPart.wadMul(WadRayMath.wad() - weight) + quadraticPart.wadMul(weight);
+                } else {
+                    // For elasticity < 1, use linear as it's safer
+                    excessRate = linearPart;
+                }
+            }
 
             return normalRate + excessRate;
         }

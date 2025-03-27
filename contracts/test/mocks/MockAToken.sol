@@ -14,16 +14,16 @@ import "../../src/interfaces/IAToken.sol";
 contract MockAToken is IAToken, ERC20, Ownable {
     // Underlying asset address
     address private _underlyingAsset;
-    
+
     // Scaled balances for users
     mapping(address => uint256) private _scaledBalances;
-    
+
     // Total scaled supply
     uint256 private _totalScaledSupply;
-    
+
     // Flag to control whether operations revert
     bool private _shouldRevert;
-    
+
     // Track calls for testing verification
     uint256 public mintCalls;
     uint256 public burnCalls;
@@ -36,16 +36,14 @@ contract MockAToken is IAToken, ERC20, Ownable {
      * @param underlyingAsset The address of the underlying asset
      * @param owner The owner of the token
      */
-    constructor(
-        string memory name,
-        string memory symbol,
-        address underlyingAsset,
-        address owner
-    ) ERC20(name, symbol) Ownable(msg.sender) {
+    constructor(string memory name, string memory symbol, address underlyingAsset, address owner)
+        ERC20(name, symbol)
+        Ownable(msg.sender)
+    {
         require(underlyingAsset != address(0), "MockAToken: Zero address");
-        
+
         _underlyingAsset = underlyingAsset;
-        
+
         // Transfer ownership
         if (owner != msg.sender) {
             transferOwnership(owner);
@@ -59,15 +57,15 @@ contract MockAToken is IAToken, ERC20, Ownable {
         if (_shouldRevert) {
             revert("MockAToken: Forced failure");
         }
-        
+
         mintCalls++;
-        
+
         uint256 scaledAmount = amount / index;
         _scaledBalances[user] += scaledAmount;
         _totalScaledSupply += scaledAmount;
-        
+
         _mint(user, amount);
-        
+
         emit Mint(user, amount, index);
     }
 
@@ -78,19 +76,19 @@ contract MockAToken is IAToken, ERC20, Ownable {
         if (_shouldRevert) {
             revert("MockAToken: Forced failure");
         }
-        
+
         burnCalls++;
-        
+
         require(balanceOf(user) >= amount, "MockAToken: Insufficient balance");
-        
+
         uint256 scaledAmount = amount / index;
         _scaledBalances[user] -= scaledAmount;
         _totalScaledSupply -= scaledAmount;
-        
+
         _burn(user, amount);
-        
+
         emit Burn(user, amount, index);
-        
+
         return amount;
     }
 
@@ -101,12 +99,12 @@ contract MockAToken is IAToken, ERC20, Ownable {
         if (_shouldRevert) {
             revert("MockAToken: Forced failure");
         }
-        
+
         transferUnderlyingToCalls++;
-        
+
         // In a real implementation, this would transfer the underlying asset
         // For our mock, we just track the call
-        
+
         return amount;
     }
 

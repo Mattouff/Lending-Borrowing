@@ -15,26 +15,26 @@ import "../../src/libraries/ReserveLogic.sol";
  */
 contract MockLendingPoolCore is ILendingPoolCore, Ownable {
     using SafeERC20 for IERC20;
-    
+
     // Reserves mapping (asset => reserve data)
     mapping(address => ReserveLogic.ReserveData) private _reserves;
-    
+
     // List of reserves
     address[] private _reservesList;
-    
+
     // Lending pool address (only this address can call certain functions)
     address private _lendingPool;
-    
+
     // Flag to control whether operations revert
     bool private _shouldRevert;
-    
+
     // Track calls for testing verification
     uint256 public initReserveCalls;
     uint256 public updateInterestRateStrategyCalls;
     uint256 public updateReserveStateCalls;
     uint256 public transferToUserCalls;
     uint256 public transferToReserveCalls;
-    
+
     // Events
     event ReserveInitialized(
         address indexed asset, address indexed aToken, address indexed debtToken, address interestRateStrategy
@@ -55,32 +55,38 @@ contract MockLendingPoolCore is ILendingPoolCore, Ownable {
      * @dev Only the lending pool can call this
      */
     modifier onlyLendingPool() {
-        require(_lendingPool != address(0) && msg.sender == _lendingPool, "MockLendingPoolCore: Caller is not lending pool");
+        require(
+            _lendingPool != address(0) && msg.sender == _lendingPool, "MockLendingPoolCore: Caller is not lending pool"
+        );
         _;
     }
 
     /**
      * @inheritdoc ILendingPoolCore
      */
-    function initReserve(address asset, address aToken, address debtToken, address interestRateStrategy) external override onlyOwner {
+    function initReserve(address asset, address aToken, address debtToken, address interestRateStrategy)
+        external
+        override
+        onlyOwner
+    {
         if (_shouldRevert) {
             revert("MockLendingPoolCore: Forced failure");
         }
-        
+
         initReserveCalls++;
-        
+
         require(asset != address(0), "MockLendingPoolCore: Zero asset");
         require(aToken != address(0), "MockLendingPoolCore: Zero aToken");
         require(debtToken != address(0), "MockLendingPoolCore: Zero debtToken");
         require(interestRateStrategy != address(0), "MockLendingPoolCore: Zero interest rate strategy");
-        
+
         _reserves[asset].aTokenAddress = aToken;
         _reserves[asset].debtTokenAddress = debtToken;
         _reserves[asset].interestRateStrategyAddress = interestRateStrategy;
         _reserves[asset].lastUpdateTimestamp = block.timestamp;
-        
+
         _reservesList.push(asset);
-        
+
         emit ReserveInitialized(asset, aToken, debtToken, interestRateStrategy);
     }
 
@@ -91,12 +97,12 @@ contract MockLendingPoolCore is ILendingPoolCore, Ownable {
         if (_shouldRevert) {
             revert("MockLendingPoolCore: Forced failure");
         }
-        
+
         updateInterestRateStrategyCalls++;
-        
+
         require(asset != address(0), "MockLendingPoolCore: Zero asset");
         require(interestRateStrategy != address(0), "MockLendingPoolCore: Zero interest rate strategy");
-        
+
         _reserves[asset].interestRateStrategyAddress = interestRateStrategy;
     }
 
@@ -107,11 +113,11 @@ contract MockLendingPoolCore is ILendingPoolCore, Ownable {
         if (_shouldRevert) {
             revert("MockLendingPoolCore: Forced failure");
         }
-        
+
         updateReserveStateCalls++;
-        
+
         require(asset != address(0), "MockLendingPoolCore: Zero asset");
-        
+
         // In a real implementation, this would update the interest rates
         // For our mock, we just update the timestamp
         _reserves[asset].lastUpdateTimestamp = block.timestamp;
@@ -124,12 +130,12 @@ contract MockLendingPoolCore is ILendingPoolCore, Ownable {
         if (_shouldRevert) {
             revert("MockLendingPoolCore: Forced failure");
         }
-        
+
         transferToUserCalls++;
-        
+
         require(asset != address(0), "MockLendingPoolCore: Zero asset");
         require(to != address(0), "MockLendingPoolCore: Zero recipient");
-        
+
         // Transfer the tokens to the user
         IERC20(asset).safeTransfer(to, amount);
     }
@@ -141,12 +147,12 @@ contract MockLendingPoolCore is ILendingPoolCore, Ownable {
         if (_shouldRevert) {
             revert("MockLendingPoolCore: Forced failure");
         }
-        
+
         transferToReserveCalls++;
-        
+
         require(asset != address(0), "MockLendingPoolCore: Zero asset");
         require(from != address(0), "MockLendingPoolCore: Zero sender");
-        
+
         // Transfer the tokens from the user to the reserve
         IERC20(asset).safeTransferFrom(from, address(this), amount);
     }
@@ -158,7 +164,7 @@ contract MockLendingPoolCore is ILendingPoolCore, Ownable {
         if (_shouldRevert) {
             revert("MockLendingPoolCore: Forced failure");
         }
-        
+
         return _reserves[asset];
     }
 
@@ -169,7 +175,7 @@ contract MockLendingPoolCore is ILendingPoolCore, Ownable {
         if (_shouldRevert) {
             revert("MockLendingPoolCore: Forced failure");
         }
-        
+
         return _reservesList;
     }
 
@@ -180,9 +186,9 @@ contract MockLendingPoolCore is ILendingPoolCore, Ownable {
         if (_shouldRevert) {
             revert("MockLendingPoolCore: Forced failure");
         }
-        
+
         require(asset != address(0), "MockLendingPoolCore: Zero asset");
-        
+
         _reserves[asset].borrowingEnabled = enabled ? 1 : 0;
     }
 
@@ -203,7 +209,7 @@ contract MockLendingPoolCore is ILendingPoolCore, Ownable {
      */
     function setReserveRates(address asset, uint256 liquidityRate, uint256 borrowRate) external onlyOwner {
         require(asset != address(0), "MockLendingPoolCore: Zero asset");
-        
+
         _reserves[asset].currentLiquidityRate = liquidityRate;
         _reserves[asset].currentBorrowRate = borrowRate;
     }
@@ -216,7 +222,7 @@ contract MockLendingPoolCore is ILendingPoolCore, Ownable {
      */
     function setReserveTotals(address asset, uint256 totalLiquidity, uint256 totalBorrows) external onlyOwner {
         require(asset != address(0), "MockLendingPoolCore: Zero asset");
-        
+
         _reserves[asset].totalLiquidity = totalLiquidity;
         _reserves[asset].totalBorrows = totalBorrows;
     }
@@ -247,9 +253,9 @@ contract MockLendingPoolCore is ILendingPoolCore, Ownable {
      */
     function setReserveData(address asset, ReserveLogic.ReserveData calldata reserveData) external onlyOwner {
         require(asset != address(0), "MockLendingPoolCore: Zero asset");
-        
+
         _reserves[asset] = reserveData;
-        
+
         // Add to reserves list if not already there
         bool found = false;
         for (uint256 i = 0; i < _reservesList.length; i++) {
@@ -258,7 +264,7 @@ contract MockLendingPoolCore is ILendingPoolCore, Ownable {
                 break;
             }
         }
-        
+
         if (!found) {
             _reservesList.push(asset);
         }

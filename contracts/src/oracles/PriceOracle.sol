@@ -123,20 +123,20 @@ contract PriceOracle is IPriceOracle, Ownable {
     function _getAssetPrice(address priceFeed) internal view returns (uint256) {
         (, int256 price,, uint256 updatedAt,) = AggregatorV3Interface(priceFeed).latestRoundData();
 
-        // Check for stale price
+        // Check for stale price - make this check more robust
+        require(updatedAt > 0, "PriceOracle: Invalid timestamp");
         require(block.timestamp - updatedAt <= PRICE_EXPIRATION_TIME, "PriceOracle: Stale price");
 
         // Price must be positive
         require(price > 0, "PriceOracle: Negative price");
 
-        // Convert to 18 decimals
-        uint8 decimals = AggregatorV3Interface(priceFeed).decimals();
-        uint256 priceUint = uint256(price);
+        // Get asset price in USD
+        uint256 assetPriceUsd = uint256(price);
 
-        if (decimals < 18) {
-            return priceUint * 10 ** (18 - decimals);
-        } else {
-            return priceUint / 10 ** (decimals - 18);
-        }
+        // Get ETH price in USD
+        uint256 ethPriceUsd = ethUsdPrice;
+
+        // Calculate asset price in ETH: (assetPriceUsd / ethPriceUsd) * 1e18
+        return (assetPriceUsd * 1e18) / ethPriceUsd;
     }
 }

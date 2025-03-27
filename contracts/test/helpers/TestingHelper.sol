@@ -84,12 +84,10 @@ contract TestingHelper is Test {
      * @param owner The owner of the token
      * @return The address of the created aToken
      */
-    function createAToken(
-        string memory name,
-        string memory symbol,
-        address underlyingAsset,
-        address owner
-    ) public returns (address) {
+    function createAToken(string memory name, string memory symbol, address underlyingAsset, address owner)
+        public
+        returns (address)
+    {
         MockAToken aToken = new MockAToken(name, symbol, underlyingAsset, owner);
         return address(aToken);
     }
@@ -148,7 +146,7 @@ contract TestingHelper is Test {
     function deposit(address lendingPool, address user, address asset, uint256 amount) public {
         // Approve tokens first
         approveTokens(asset, user, lendingPool, amount);
-        
+
         // Perform deposit
         vm.prank(user);
         ILendingPool(lendingPool).deposit(asset, amount, 0);
@@ -176,7 +174,7 @@ contract TestingHelper is Test {
     function repay(address lendingPool, address user, address asset, uint256 amount) public {
         // Approve tokens first
         approveTokens(asset, user, lendingPool, amount);
-        
+
         // Perform repayment
         vm.prank(user);
         ILendingPool(lendingPool).repay(asset, amount, 1); // Variable rate
@@ -201,7 +199,7 @@ contract TestingHelper is Test {
     ) public {
         // Approve tokens first
         approveTokens(debtAsset, liquidator, lendingPool, debtToCover);
-        
+
         // Perform liquidation
         vm.prank(liquidator);
         ILendingPool(lendingPool).liquidationCall(collateralAsset, debtAsset, borrower, debtToCover);
@@ -218,14 +216,18 @@ contract TestingHelper is Test {
      * @return ltv The loan to value ratio
      * @return healthFactor The health factor
      */
-    function getUserData(address lendingPool, address user) public view returns (
-        uint256 collateral,
-        uint256 debt,
-        uint256 availableBorrows,
-        uint256 liquidationThreshold,
-        uint256 ltv,
-        uint256 healthFactor
-    ) {
+    function getUserData(address lendingPool, address user)
+        public
+        view
+        returns (
+            uint256 collateral,
+            uint256 debt,
+            uint256 availableBorrows,
+            uint256 liquidationThreshold,
+            uint256 ltv,
+            uint256 healthFactor
+        )
+    {
         return ILendingPool(lendingPool).getUserAccountData(user);
     }
 
@@ -254,7 +256,7 @@ contract TestingHelper is Test {
     function advanceTimeAndUpdateReserve(address lendingPool, address asset, uint256 secondsToAdvance) public {
         // Advance time
         vm.warp(block.timestamp + secondsToAdvance);
-        
+
         // Trigger reserve update
         vm.prank(address(this));
         ILendingPool(lendingPool).deposit(asset, 0, 0); // Zero deposit to trigger update

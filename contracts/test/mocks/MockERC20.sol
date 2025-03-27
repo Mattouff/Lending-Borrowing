@@ -21,20 +21,17 @@ contract MockERC20 is ERC20, Ownable {
      * @param decimalsValue The number of decimals for the token
      * @param owner The address that will own this contract and be able to mint/burn
      */
-    constructor(
-        string memory name,
-        string memory symbol,
-        uint256 initialSupply,
-        uint8 decimalsValue,
-        address owner
-    ) ERC20(name, symbol) Ownable(msg.sender) {
+    constructor(string memory name, string memory symbol, uint256 initialSupply, uint8 decimalsValue, address owner)
+        ERC20(name, symbol)
+        Ownable(msg.sender)
+    {
         _decimals = decimalsValue;
-        
+
         // Mint initial supply
         if (initialSupply > 0) {
             _mint(owner, initialSupply);
         }
-        
+
         // Transfer ownership
         if (owner != msg.sender) {
             transferOwnership(owner);

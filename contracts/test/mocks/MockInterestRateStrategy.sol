@@ -13,18 +13,18 @@ import "../../src/interfaces/IInterestRateStrategy.sol";
 contract MockInterestRateStrategy is IInterestRateStrategy, Ownable {
     // Base variable borrow rate
     uint256 private _baseVariableBorrowRate;
-    
+
     // Max variable borrow rate
     uint256 private _maxVariableBorrowRate;
-    
+
     // Configurable rates to return
     uint256 private _liquidityRate;
     uint256 private _stableBorrowRate;
     uint256 private _variableBorrowRate;
-    
+
     // Flag to control whether operations revert
     bool private _shouldRevert;
-    
+
     // Track calls for testing verification
     uint256 public calculateInterestRatesCalls;
 
@@ -57,7 +57,7 @@ contract MockInterestRateStrategy is IInterestRateStrategy, Ownable {
         if (_shouldRevert) {
             revert("MockInterestRateStrategy: Forced failure");
         }
-        
+
         return _baseVariableBorrowRate;
     }
 
@@ -68,7 +68,7 @@ contract MockInterestRateStrategy is IInterestRateStrategy, Ownable {
         if (_shouldRevert) {
             revert("MockInterestRateStrategy: Forced failure");
         }
-        
+
         return _maxVariableBorrowRate;
     }
 
@@ -84,7 +84,7 @@ contract MockInterestRateStrategy is IInterestRateStrategy, Ownable {
         if (_shouldRevert) {
             revert("MockInterestRateStrategy: Forced failure");
         }
-        
+
         // Can use these parameters to calculate dynamic rates for more complex tests
         // For now, just return the configured rates
         return (_liquidityRate, _stableBorrowRate, _variableBorrowRate);
@@ -143,11 +143,10 @@ contract MockInterestRateStrategy is IInterestRateStrategy, Ownable {
      * @param stableBorrowRate The new stable borrow rate
      * @param variableBorrowRate The new variable borrow rate
      */
-    function setAllRates(
-        uint256 liquidityRate,
-        uint256 stableBorrowRate,
-        uint256 variableBorrowRate
-    ) external onlyOwner {
+    function setAllRates(uint256 liquidityRate, uint256 stableBorrowRate, uint256 variableBorrowRate)
+        external
+        onlyOwner
+    {
         _liquidityRate = liquidityRate;
         _stableBorrowRate = stableBorrowRate;
         _variableBorrowRate = variableBorrowRate;

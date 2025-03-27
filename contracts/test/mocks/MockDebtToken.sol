@@ -14,19 +14,19 @@ import "../../src/interfaces/IDebtToken.sol";
 contract MockDebtToken is IDebtToken, ERC20, Ownable {
     // Underlying asset address
     address private _underlyingAsset;
-    
+
     // Lending pool address
     address private _lendingPool;
-    
+
     // Scaled balances for users
     mapping(address => uint256) private _scaledBalances;
-    
+
     // Total scaled supply
     uint256 private _totalScaledSupply;
-    
+
     // Flag to control whether operations revert
     bool private _shouldRevert;
-    
+
     // Track calls for testing verification
     uint256 public mintCalls;
     uint256 public burnCalls;
@@ -39,19 +39,16 @@ contract MockDebtToken is IDebtToken, ERC20, Ownable {
      * @param lendingPool The address of the lending pool
      * @param owner The owner of the token
      */
-    constructor(
-        string memory name,
-        string memory symbol,
-        address underlyingAsset,
-        address lendingPool,
-        address owner
-    ) ERC20(name, symbol) Ownable(msg.sender) {
+    constructor(string memory name, string memory symbol, address underlyingAsset, address lendingPool, address owner)
+        ERC20(name, symbol)
+        Ownable(msg.sender)
+    {
         require(underlyingAsset != address(0), "MockDebtToken: Zero underlying asset");
         require(lendingPool != address(0), "MockDebtToken: Zero lending pool");
-        
+
         _underlyingAsset = underlyingAsset;
         _lendingPool = lendingPool;
-        
+
         // Transfer ownership
         if (owner != msg.sender) {
             transferOwnership(owner);
@@ -65,16 +62,16 @@ contract MockDebtToken is IDebtToken, ERC20, Ownable {
         if (_shouldRevert) {
             revert("MockDebtToken: Forced failure");
         }
-        
+
         require(msg.sender == _lendingPool, "MockDebtToken: Only lending pool");
         mintCalls++;
-        
+
         uint256 scaledAmount = amount / index;
         _scaledBalances[user] += scaledAmount;
         _totalScaledSupply += scaledAmount;
-        
+
         _mint(user, amount);
-        
+
         emit Mint(user, amount, index);
     }
 
@@ -85,23 +82,23 @@ contract MockDebtToken is IDebtToken, ERC20, Ownable {
         if (_shouldRevert) {
             revert("MockDebtToken: Forced failure");
         }
-        
+
         require(msg.sender == _lendingPool, "MockDebtToken: Only lending pool");
         burnCalls++;
-        
+
         uint256 currentBalance = balanceOf(user);
         uint256 amountToBurn = amount == type(uint256).max ? currentBalance : amount;
-        
+
         require(currentBalance >= amountToBurn, "MockDebtToken: Insufficient balance");
-        
+
         uint256 scaledAmount = amountToBurn / index;
         _scaledBalances[user] -= scaledAmount;
         _totalScaledSupply -= scaledAmount;
-        
+
         _burn(user, amountToBurn);
-        
+
         emit Burn(user, amountToBurn, index);
-        
+
         return amountToBurn;
     }
 
