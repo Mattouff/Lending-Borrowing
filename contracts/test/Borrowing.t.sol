@@ -22,7 +22,7 @@ contract BorrowingTest is Test {
     function setUp() public {
         token = new Token(initialSupply);
         mockCollateral = new MockCollateral();
-        borrowing = new Borrowing(address(token), address(mockCollateral));
+        borrowing = new Borrowing(address(token), address(mockCollateral), 1e16, 2e16, 1e18);
 
         token.transfer(address(borrowing), 500 * 10 ** 18);
         token.transfer(user, 100 * 10 ** 18);
@@ -49,7 +49,7 @@ contract BorrowingTest is Test {
     function testBorrowFailsDueToCollateral() public {
         Token localToken = new Token(initialSupply);
         MockCollateralFalse falseCollateral = new MockCollateralFalse();
-        Borrowing localBorrowing = new Borrowing(address(localToken), address(falseCollateral));
+        Borrowing localBorrowing = new Borrowing(address(localToken), address(falseCollateral), 1e16, 2e16, 1e18);
         localToken.transfer(address(localBorrowing), 500 * 10 ** 18);
         localToken.transfer(user, 100 * 10 ** 18);
 
@@ -62,7 +62,7 @@ contract BorrowingTest is Test {
     function testBorrowFailsWhenTokenTransferFails() public {
         MockFailTransferToken failToken = new MockFailTransferToken(initialSupply);
         MockCollateral collateral = new MockCollateral();
-        Borrowing localBorrowing = new Borrowing(address(failToken), address(collateral));
+        Borrowing localBorrowing = new Borrowing(address(failToken), address(collateral), 1e16, 2e16, 1e18);
         failToken.transfer(address(localBorrowing), 500 * 10 ** 18);
         failToken.transfer(user, 100 * 10 ** 18);
 
@@ -117,7 +117,7 @@ contract BorrowingTest is Test {
     function testRepayFailsWhenTokenTransferFromFails() public {
         MockFailTransferFromToken failFromToken = new MockFailTransferFromToken(initialSupply);
         MockCollateral collateral = new MockCollateral();
-        Borrowing localBorrowing = new Borrowing(address(failFromToken), address(collateral));
+        Borrowing localBorrowing = new Borrowing(address(failFromToken), address(collateral), 1e16, 2e16, 1e18);
         failFromToken.transfer(address(localBorrowing), 500 * 10 ** 18);
         failFromToken.transfer(user, 100 * 10 ** 18);
 

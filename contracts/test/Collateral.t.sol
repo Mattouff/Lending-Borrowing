@@ -16,6 +16,8 @@ contract CollateralTest is Test {
     Collateral collateral;
     MockBorrowingForCollateral mockBorrowing;
     address user = address(0x1);
+    address borrower = address(0x2);
+    address liquidator = address(0x3);
     uint256 initialSupply = 1000 * 10 ** 18;
 
     /// @notice Sets up the testing environment by deploying Token, MockBorrowingForCollateral, and Collateral contracts,
@@ -225,5 +227,90 @@ contract CollateralTest is Test {
         collateral.depositCollateral(depositAmount);
         bool allowed = collateral.canBorrow(user, 50 * 10 ** 18);
         assertTrue(allowed, "Should allow borrowing when no borrow exists");
+    }
+
+    /// @notice Tests that liquidation succeeds for an undercollateralized borrower.
+    function testLiquidateSuccess() public {
+        // Transférer des tokens au borrower
+        vm.prank(address(this));
+        token.transfer(borrower, 150 * 10 ** 18);
+
+        uint256 depositCollateral = 150 * 10 ** 18;
+        vm.prank(borrower);
+        token.approve(address(collateral), depositCollateral);
+        vm.prank(borrower);
+        collateral.depositCollateral(depositCollateral);
+
+        // Simuler une dette élevée pour rendre le ratio insuffisant :
+        // Par exemple, une dette de 130 tokens donne un ratio ≈115% (< seuil de liquidation, supposé 125%).
+        mockBorrowing.setBorrowedBalance(borrower, 130 * 10 ** 18);
+        // IMPORTANT : s'assurer que le contrat Borrowing connaît l'adresse correcte du contrat Collateral
+        mockBorrowing.setCollateral(address(collateral));
+
+        uint256 repayAmount = 50 * 10 ** 18;
+
+        // Assurez-vous que le liquidateur a suffisamment de tokens
+        vm.prank(address(this));
+        token.transfer(liquidator, repayAmount);
+
+        // Le liquidateur approuve le transfert de repayAmount vers le contrat Collateral.
+        vm.prank(liquidator);
+        token.approve(address(collateral), repayAmount);
+
+        // Vérifiez que l'approbation est bien en place
+        uint256 allowance = token.allowance(liquidator, address(collateral));
+        assertEq(allowance, repayAmount, "Allowance not set correctly");
+
+        vm.prank(liquidator);
+        collateral.liquidate(borrower, repayAmount);
+
+        uint256 newDebt = mockBorrowing.borrowedBalance(borrower);
+        assertEq(newDebt, (130 - 50) * 10 ** 18, "Borrower's debt not reduced correctly");
+
+        // Supposons LIQUIDATION_BONUS = 10, alors collateralToSeize = 50 * 110/100 = 55 tokens.
+        uint256 newCollateral = collateral.collateralBalance(borrower);
+        assertEq(newCollateral, (150 - 55) * 10 ** 18, "Borrower's collateral not reduced correctly");
+
+        uint256 liquidatorBalance = token.balanceOf(liquidator);
+        assertEq(liquidatorBalance, 55 * 10 ** 18, "Liquidator did not receive collateral correctly");
+    }
+
+    /// @notice Teste que la liquidation échoue si le montant de remboursement est supérieur à la dette de l'emprunteur.
+    function testLiquidateFailsWhenCollateralRatioSufficient() public {
+        // Transférer des tokens au borrower
+        vm.prank(address(this));
+        token.transfer(borrower, 150 * 10 ** 18);
+
+        uint256 depositCollateral = 150 * 10 ** 18;
+        vm.prank(borrower);
+        token.approve(address(collateral), depositCollateral);
+        vm.prank(borrower);
+        collateral.depositCollateral(depositCollateral);
+
+        mockBorrowing.setBorrowedBalance(borrower, 100 * 10 ** 18);
+
+        uint256 repayAmount = 50 * 10 ** 18;
+        vm.prank(liquidator);
+        token.approve(address(Borrowing(address(collateral.borrowing()))), repayAmount);
+        vm.prank(liquidator);
+        vm.expectRevert("Collateral ratio is sufficient for liquidation");
+        collateral.liquidate(borrower, repayAmount);
+    }
+
+    /// @notice Teste que la liquidation échoue si le montant de remboursement est zéro.
+    function testLiquidateFailsWhenRepayAmountZero() public {
+        // Transférer des tokens au borrower
+        vm.prank(address(this));
+        token.transfer(borrower, 100 * 10 ** 18);
+
+        uint256 depositCollateral = 100 * 10 ** 18;
+        vm.prank(borrower);
+        token.approve(address(collateral), depositCollateral);
+        vm.prank(borrower);
+        collateral.depositCollateral(depositCollateral);
+
+        vm.prank(liquidator);
+        vm.expectRevert("Repay amount must be greater than zero");
+        collateral.liquidate(borrower, 0);
     }
 }

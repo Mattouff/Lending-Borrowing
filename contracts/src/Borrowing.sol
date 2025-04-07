@@ -6,21 +6,90 @@ import "./Collateral.sol";
 
 /// @title Borrowing - A contract to manage borrowing operations for a decentralized lending platform.
 /// @notice Users can borrow tokens and repay their loans. Borrowing limits are defined by the collateral managed in Collateral.sol.
+///         A dynamic interest rate r(U) = rMin + (rMax - rMin) * U^beta est appliqué sur le montant emprunté.
 contract Borrowing {
     Token public immutable token;
     Collateral public immutable collateral;
 
-    /// @notice Mapping of user addresses to their borrowed token amounts.
+    /// @notice Mapping of user addresses to their borrowed token amounts (principal + interest).
     mapping(address => uint256) public borrowedBalance;
-    /// @notice Total borrowed tokens across all users.
+
+    /// @notice Mapping of user addresses to the last time we updated their borrowed balance.
+    mapping(address => uint256) public lastUpdateTime;
+
+    /// @notice Total borrowed tokens across all users (somme de borrowedBalance).
     uint256 public totalBorrowed;
+
+    /// @notice Paramètres pour le calcul du taux d'intérêt dynamique.
+    uint256 public rMin; // Taux minimum, en 1e18 (ex: 5e16 = 5%).
+    uint256 public rMax; // Taux maximum, en 1e18 (ex: 20e16 = 20%).
+    uint256 public beta; // Facteur d’élasticité, en 1e18 (ex: 1e18 = exponent 1, 2e18 = exponent 2, etc.).
 
     /// @notice Constructor for the Borrowing contract.
     /// @param _token The address of the token used for borrowing.
     /// @param _collateral The address of the Collateral contract defining collateral conditions.
-    constructor(address _token, address _collateral) {
+    /// @param _rMin Taux d’intérêt minimum (ex: 5e16 = 5%).
+    /// @param _rMax Taux d’intérêt maximum (ex: 20e16 = 20%).
+    /// @param _beta Facteur d’élasticité (ex: 1e18 = exponent 1, 2e18 = exponent 2).
+    constructor(address _token, address _collateral, uint256 _rMin, uint256 _rMax, uint256 _beta) {
         token = Token(_token);
         collateral = Collateral(_collateral);
+        rMin = _rMin;
+        rMax = _rMax;
+        beta = _beta;
+    }
+
+    /// @notice Gets the current interest rate for borrowed tokens.
+    /// @return The current interest rate in 1e18.
+    /// @dev The interest rate is calculated based on the total borrowed amount and the available balance in the pool.
+    ///         The interest rate is determined by the formula: r(U) = rMin + (rMax - rMin) * U^beta.
+    ///         Where U is the utilization rate of the pool: U = totalBorrowed / (balanceDisponible + totalBorrowed).
+    ///         The utilization rate is calculated as a fraction of the total borrowed amount over the total pool capacity.
+    function getCurrentRate() public view returns (uint256) {
+        // Déterminer la capacité du pool : ce qui reste dans le contrat + totalBorrowed
+        uint256 balanceDisponible = token.balanceOf(address(this));
+        uint256 capacity = balanceDisponible + totalBorrowed;
+        if (capacity == 0) {
+            // Si rien n'est dans le pool, on renvoie le taux minimum
+            return rMin;
+        }
+
+        uint256 U = (totalBorrowed * 1e18) / capacity;
+        uint256 UtoBeta = U;
+        uint256 diff = rMax - rMin;
+        uint256 variablePart = (diff * UtoBeta) / 1e18;
+        return rMin + variablePart;
+    }
+
+    /// @notice Updates the borrowed balance for a user by calculating the interest accrued.
+    /// @param user The address of the user.
+    /// @dev The interest is calculated based on the time elapsed since the last update.
+    function updateBorrowedBalance(address user) internal {
+        uint256 previousTime = lastUpdateTime[user];
+        lastUpdateTime[user] = block.timestamp;
+
+        // If the first time, do nothing
+        if (previousTime == 0) {
+            return;
+        }
+
+        uint256 timeElapsed = block.timestamp - previousTime;
+        if (timeElapsed == 0) {
+            return;
+        }
+
+        uint256 principal = borrowedBalance[user];
+        if (principal == 0) {
+            return;
+        }
+
+        uint256 currentRate = getCurrentRate();
+        uint256 interest = (principal * currentRate * timeElapsed) / (365 days * 1e18);
+
+        if (interest > 0) {
+            borrowedBalance[user] += interest;
+            totalBorrowed += interest;
+        }
     }
 
     /// @notice Allows a user to borrow tokens.
@@ -29,6 +98,8 @@ contract Borrowing {
     function borrow(uint256 amount) external {
         require(amount > 0, "Amount must be greater than zero");
         require(collateral.canBorrow(msg.sender, amount), "Insufficient collateral");
+        updateBorrowedBalance(msg.sender);
+
         borrowedBalance[msg.sender] += amount;
         totalBorrowed += amount;
         require(token.transfer(msg.sender, amount), "Borrow transfer failed");
@@ -39,15 +110,27 @@ contract Borrowing {
     /// @dev The caller must have approved the contract to transfer tokens on their behalf.
     function repay(uint256 amount) external {
         require(amount > 0, "Amount must be greater than zero");
+        updateBorrowedBalance(msg.sender);
         require(borrowedBalance[msg.sender] >= amount, "Repay amount exceeds borrowed balance");
         require(token.transferFrom(msg.sender, address(this), amount), "Repay transfer failed");
         borrowedBalance[msg.sender] -= amount;
         totalBorrowed -= amount;
     }
 
-    /// @notice Gets the borrowed token amount for a specific user.
+    /// @notice Reduces the debt of a borrower by the specified amount.
+    /// @dev Can only be called by the associated Collateral contract if we need to liquidate the user.
+    /// @param borrower The address of the borrower.
+    /// @param amount The amount by which to reduce the debt.
+    function reduceDebt(address borrower, uint256 amount) external {
+        require(msg.sender == address(collateral), "Not authorized");
+        require(borrowedBalance[borrower] >= amount, "Insufficient debt");
+        borrowedBalance[borrower] -= amount;
+        totalBorrowed -= amount;
+    }
+
+    /// @notice Gets the borrowed token amount (principal + intérêts accumulés) for a specific user.
     /// @param user The address of the user.
-    /// @return The amount of tokens borrowed by the user.
+    /// @return The amount of tokens owed by the user.
     function getBorrowToken(address user) external view returns (uint256) {
         return borrowedBalance[user];
     }

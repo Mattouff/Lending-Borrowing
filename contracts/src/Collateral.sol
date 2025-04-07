@@ -12,16 +12,20 @@ contract Collateral {
 
     /// @notice The minimum collateral ratio required, expressed as a percentage (e.g., 150 means 150%).
     uint256 public constant MIN_COLLATERAL_RATIO = 150;
+    /// @notice The liquidation threshold ratio, expressed as a percentage (e.g., 125 means liquidation is allowed if collateral ratio < 125%).
+    uint256 public constant LIQUIDATION_THRESHOLD = 125;
+    /// @notice The liquidation bonus (pénalité) expressed as a percentage bonus for the liquidator (e.g., 10 means +10% bonus collateral).
+    uint256 public constant LIQUIDATION_BONUS = 10;
 
     /// @notice Mapping of user addresses to their deposited collateral amounts.
     mapping(address => uint256) public collateralBalance;
 
     /// @notice Constructor that sets the underlying token and the Borrowing contract.
     /// @param _token The address of the token used as collateral.
-    /// @param _borrowing The address of the Borrowing contract defining collateral conditions.
-    constructor(address _token, address _borrowing) {
+    /// @param _collateral The address of the Borrowing contract defining collateral conditions.
+    constructor(address _token, address _collateral) {
         token = Token(_token);
-        borrowing = Borrowing(_borrowing);
+        borrowing = Borrowing(_collateral);
     }
 
     /// @notice Deposits collateral into the contract.
@@ -47,14 +51,13 @@ contract Collateral {
         }
         collateralBalance[msg.sender] = newCollateral;
 
-        // Appel bas niveau via .call pour intercepter un revert ou un retour false
+        // Appel bas niveau pour transférer le collatéral à l'utilisateur
         (bool success, bytes memory returndata) =
             address(token).call(abi.encodeWithSelector(token.transfer.selector, msg.sender, amount));
         if (!success) {
             revert("Collateral withdrawal transfer failed");
         }
         if (returndata.length > 0) {
-            // Décode le retour pour vérifier qu'il renvoie true.
             bool transferSuccess = abi.decode(returndata, (bool));
             require(transferSuccess, "Collateral withdrawal transfer failed");
         }
@@ -81,5 +84,32 @@ contract Collateral {
             return true;
         }
         return (collateralBalance[user] * 100) >= (totalBorrowed * MIN_COLLATERAL_RATIO);
+    }
+
+    /// @notice Liquidates an undercollateralized borrower's position if the collateral crash.
+    /// @param borrower The address of the borrower to be liquidated.
+    /// @param repayAmount The amount of debt the liquidator is willing to repay.
+    /// @dev The liquidator must transfer repayAmount tokens to the Borrowing contract.
+    ///      In exchange, the liquidator se voit attribuer une portion du collatéral avec un bonus.
+    function liquidate(address borrower, uint256 repayAmount) external {
+        require(repayAmount > 0, "Repay amount must be greater than zero");
+        uint256 borrowed = borrowing.borrowedBalance(borrower);
+        require(borrowed > 0, "Borrower has no debt");
+
+        uint256 userCollateral = collateralBalance[borrower];
+        uint256 currentRatio = (userCollateral * 100) / borrowed;
+        require(currentRatio < LIQUIDATION_THRESHOLD, "Collateral ratio is sufficient for liquidation");
+
+        require(token.transferFrom(msg.sender, address(borrowing), repayAmount), "Repayment transfer failed");
+
+        uint256 collateralToSeize = (repayAmount * (100 + LIQUIDATION_BONUS)) / 100;
+        if (collateralToSeize > userCollateral) {
+            collateralToSeize = userCollateral;
+        }
+
+        borrowing.reduceDebt(borrower, repayAmount);
+        collateralBalance[borrower] -= collateralToSeize;
+
+        require(token.transfer(msg.sender, collateralToSeize), "Collateral transfer to liquidator failed");
     }
 }
