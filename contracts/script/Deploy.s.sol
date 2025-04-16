@@ -14,7 +14,7 @@ contract DeployToken is Script {
         uint256 initialSupply = 1000 * 10 ** 18;
 
         Token token = new Token(initialSupply);
-        LendingPool lendingPool = new LendingPool(address(token));
+        LendingPool lendingPool = new LendingPool(address(token), 5e16);
 
         vm.stopBroadcast();
 
