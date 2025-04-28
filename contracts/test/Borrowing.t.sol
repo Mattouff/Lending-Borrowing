@@ -338,4 +338,28 @@ contract BorrowingTest is Test {
         uint256 afterRepayAmount = borrowing.getBorrowToken(user);
         assertEq(afterRepayAmount, newBorrowedAmount - 50 * 10 ** 18, "Balance should decrease by repay amount");
     }
+
+    /// @notice Tests the early return conditions in getBorrowToken function.
+    function testGetBorrowTokenEarlyReturns() public {
+        // Case 1: lastUpdateTime is 0 (user has never borrowed)
+        assertEq(borrowing.lastUpdateTime(user), 0, "Initial lastUpdateTime should be 0");
+        assertEq(borrowing.getBorrowToken(user), 0, "getBorrowToken should return 0 for user who never borrowed");
+
+        // Case 2: User borrows and then repays everything
+        vm.prank(user);
+        borrowing.borrow(50 * 10 ** 18);
+
+        vm.prank(user);
+        token.approve(address(borrowing), 50 * 10 ** 18);
+
+        vm.prank(user);
+        borrowing.repay(50 * 10 ** 18);
+
+        assertEq(borrowing.borrowedPrincipal(user), 0, "borrowedPrincipal should be 0 after full repayment");
+        assertNotEq(borrowing.lastUpdateTime(user), 0, "lastUpdateTime should not be 0 after activity");
+
+        vm.warp(block.timestamp + 365 days);
+
+        assertEq(borrowing.getBorrowToken(user), 0, "getBorrowToken should return 0 when borrowedPrincipal is 0");
+    }
 }
