@@ -16,6 +16,8 @@ contract Collateral {
     uint256 public constant LIQUIDATION_THRESHOLD = 125;
     /// @notice The liquidation bonus (pénalité) expressed as a percentage bonus for the liquidator (e.g., 10 means +10% bonus collateral).
     uint256 public constant LIQUIDATION_BONUS = 10;
+    /// @notice The maximum percentage of collateral that can be borrowed (75%)
+    uint256 public constant MAX_BORROWING_PERCENTAGE = 75;
 
     /// @notice Mapping of user addresses to their deposited collateral amounts.
     mapping(address => uint256) public collateralBalance;
@@ -77,13 +79,17 @@ contract Collateral {
     /// @notice Checks if a user can borrow an additional amount based on their collateral.
     /// @param user The address of the user.
     /// @param borrowAmount The additional amount the user intends to borrow.
-    /// @return True if the user can borrow the additional amount while maintaining the minimum collateral ratio.
+    /// @return True if the user can borrow the additional amount while maintaining the minimum collateral ratio and maximum borrowing limit.
     function canBorrow(address user, uint256 borrowAmount) external view returns (bool) {
         uint256 totalBorrowed = borrowing.borrowedPrincipal(user) + borrowAmount;
         if (totalBorrowed == 0) {
             return true;
         }
-        return (collateralBalance[user] * 100) >= (totalBorrowed * MIN_COLLATERAL_RATIO);
+
+        bool sufficientCollateral = (collateralBalance[user] * 100) >= (totalBorrowed * MIN_COLLATERAL_RATIO);
+        bool withinMaxLimit = totalBorrowed <= (collateralBalance[user] * MAX_BORROWING_PERCENTAGE / 100);
+
+        return sufficientCollateral && withinMaxLimit;
     }
 
     /// @notice Liquidates an undercollateralized borrower's position if the collateral crash.
