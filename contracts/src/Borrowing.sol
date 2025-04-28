@@ -55,7 +55,8 @@ contract Borrowing {
         }
 
         uint256 U = (totalBorrowed * 1e18) / capacity;
-        uint256 UtoBeta = U;
+        // Calculate U^beta properly
+        uint256 UtoBeta = power(U, beta);
         uint256 diff = rMax - rMin;
         uint256 variablePart = (diff * UtoBeta) / 1e18;
         return rMin + variablePart;
@@ -139,5 +140,19 @@ contract Borrowing {
     /// @return The total amount of tokens borrowed.
     function getAllBorrowToken() external view returns (uint256) {
         return totalBorrowed;
+    }
+
+    /// @notice Calculates the power of a base raised to an exponent.
+    /// @param base The base number.
+    /// @param exponent The exponent to raise the base to.
+    /// @return The result of base^exponent in fixed-point representation.
+    function power(uint256 base, uint256 exponent) internal pure returns (uint256) {
+        uint256 result = 1e18; // Start with 1 in fixed-point representation
+
+        for (uint256 i = 0; i < exponent / 1e18; i++) {
+            result = (result * base) / 1e18;
+        }
+
+        return result;
     }
 }
