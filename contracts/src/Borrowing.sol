@@ -11,13 +11,13 @@ contract Borrowing {
     Token public immutable token;
     Collateral public immutable collateral;
 
-    /// @notice Mapping of user addresses to their borrowed token amounts (principal + interest).
-    mapping(address => uint256) public borrowedBalance;
+    /// @notice Mapping of user addresses to their principal borrowed token amounts (without accrued interest).
+    mapping(address => uint256) public borrowedPrincipal;
 
     /// @notice Mapping of user addresses to the last time we updated their borrowed balance.
     mapping(address => uint256) public lastUpdateTime;
 
-    /// @notice Total borrowed tokens across all users (somme de borrowedBalance).
+    /// @notice Total borrowed tokens across all users (somme de borrowedPrincipal).
     uint256 public totalBorrowed;
 
     /// @notice Paramètres pour le calcul du taux d'intérêt dynamique.
@@ -55,7 +55,8 @@ contract Borrowing {
         }
 
         uint256 U = (totalBorrowed * 1e18) / capacity;
-        uint256 UtoBeta = U;
+        // Calculate U^beta properly
+        uint256 UtoBeta = power(U, beta);
         uint256 diff = rMax - rMin;
         uint256 variablePart = (diff * UtoBeta) / 1e18;
         return rMin + variablePart;
@@ -64,7 +65,7 @@ contract Borrowing {
     /// @notice Updates the borrowed balance for a user by calculating the interest accrued.
     /// @param user The address of the user.
     /// @dev The interest is calculated based on the time elapsed since the last update.
-    function updateBorrowedBalance(address user) internal {
+    function updateBorrowedPrincipal(address user) internal {
         uint256 previousTime = lastUpdateTime[user];
         lastUpdateTime[user] = block.timestamp;
 
@@ -78,7 +79,7 @@ contract Borrowing {
             return;
         }
 
-        uint256 principal = borrowedBalance[user];
+        uint256 principal = borrowedPrincipal[user];
         if (principal == 0) {
             return;
         }
@@ -87,7 +88,7 @@ contract Borrowing {
         uint256 interest = (principal * currentRate * timeElapsed) / (365 days * 1e18);
 
         if (interest > 0) {
-            borrowedBalance[user] += interest;
+            borrowedPrincipal[user] += interest;
             totalBorrowed += interest;
         }
     }
@@ -98,9 +99,9 @@ contract Borrowing {
     function borrow(uint256 amount) external {
         require(amount > 0, "Amount must be greater than zero");
         require(collateral.canBorrow(msg.sender, amount), "Insufficient collateral");
-        updateBorrowedBalance(msg.sender);
+        updateBorrowedPrincipal(msg.sender);
 
-        borrowedBalance[msg.sender] += amount;
+        borrowedPrincipal[msg.sender] += amount;
         totalBorrowed += amount;
         require(token.transfer(msg.sender, amount), "Borrow transfer failed");
     }
@@ -110,10 +111,10 @@ contract Borrowing {
     /// @dev The caller must have approved the contract to transfer tokens on their behalf.
     function repay(uint256 amount) external {
         require(amount > 0, "Amount must be greater than zero");
-        updateBorrowedBalance(msg.sender);
-        require(borrowedBalance[msg.sender] >= amount, "Repay amount exceeds borrowed balance");
+        updateBorrowedPrincipal(msg.sender);
+        require(borrowedPrincipal[msg.sender] >= amount, "Repay amount exceeds borrowed balance");
         require(token.transferFrom(msg.sender, address(this), amount), "Repay transfer failed");
-        borrowedBalance[msg.sender] -= amount;
+        borrowedPrincipal[msg.sender] -= amount;
         totalBorrowed -= amount;
     }
 
@@ -123,21 +124,48 @@ contract Borrowing {
     /// @param amount The amount by which to reduce the debt.
     function reduceDebt(address borrower, uint256 amount) external {
         require(msg.sender == address(collateral), "Not authorized");
-        require(borrowedBalance[borrower] >= amount, "Insufficient debt");
-        borrowedBalance[borrower] -= amount;
+        require(borrowedPrincipal[borrower] >= amount, "Insufficient debt");
+        borrowedPrincipal[borrower] -= amount;
         totalBorrowed -= amount;
     }
 
-    /// @notice Gets the borrowed token amount (principal + intérêts accumulés) for a specific user.
+    /// @notice Returns the current borrowed balance for a user, including accrued interest.
     /// @param user The address of the user.
-    /// @return The amount of tokens owed by the user.
+    /// @return The current borrowed balance including interest.
     function getBorrowToken(address user) external view returns (uint256) {
-        return borrowedBalance[user];
+        if (lastUpdateTime[user] == 0 || borrowedPrincipal[user] == 0) {
+            return borrowedPrincipal[user];
+        }
+
+        uint256 timeElapsed = block.timestamp - lastUpdateTime[user];
+        if (timeElapsed == 0) {
+            return borrowedPrincipal[user];
+        }
+
+        uint256 principal = borrowedPrincipal[user];
+        uint256 currentRate = getCurrentRate();
+        uint256 interest = (principal * currentRate * timeElapsed) / (365 days * 1e18);
+
+        return principal + interest;
     }
 
     /// @notice Gets the total borrowed tokens across all users.
     /// @return The total amount of tokens borrowed.
     function getAllBorrowToken() external view returns (uint256) {
         return totalBorrowed;
+    }
+
+    /// @notice Calculates the power of a base raised to an exponent.
+    /// @param base The base number.
+    /// @param exponent The exponent to raise the base to.
+    /// @return The result of base^exponent in fixed-point representation.
+    function power(uint256 base, uint256 exponent) internal pure returns (uint256) {
+        uint256 result = 1e18; // Start with 1 in fixed-point representation
+
+        for (uint256 i = 0; i < exponent / 1e18; i++) {
+            result = (result * base) / 1e18;
+        }
+
+        return result;
     }
 }

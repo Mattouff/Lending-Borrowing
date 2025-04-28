@@ -45,7 +45,7 @@ contract Collateral {
         require(collateralBalance[msg.sender] >= amount, "Withdrawal exceeds collateral balance");
 
         uint256 newCollateral = collateralBalance[msg.sender] - amount;
-        uint256 borrowed = borrowing.borrowedBalance(msg.sender);
+        uint256 borrowed = borrowing.borrowedPrincipal(msg.sender);
         if (borrowed > 0) {
             require(newCollateral * 100 >= borrowed * MIN_COLLATERAL_RATIO, "Collateral ratio too low after withdrawal");
         }
@@ -67,7 +67,7 @@ contract Collateral {
     /// @param user The address of the user.
     /// @return The collateral ratio expressed as a percentage.
     function getCollateralRatio(address user) external view returns (uint256) {
-        uint256 borrowed = borrowing.borrowedBalance(user);
+        uint256 borrowed = borrowing.borrowedPrincipal(user);
         if (borrowed == 0) {
             return type(uint256).max;
         }
@@ -79,7 +79,7 @@ contract Collateral {
     /// @param borrowAmount The additional amount the user intends to borrow.
     /// @return True if the user can borrow the additional amount while maintaining the minimum collateral ratio.
     function canBorrow(address user, uint256 borrowAmount) external view returns (bool) {
-        uint256 totalBorrowed = borrowing.borrowedBalance(user) + borrowAmount;
+        uint256 totalBorrowed = borrowing.borrowedPrincipal(user) + borrowAmount;
         if (totalBorrowed == 0) {
             return true;
         }
@@ -93,7 +93,7 @@ contract Collateral {
     ///      In exchange, the liquidator se voit attribuer une portion du collatéral avec un bonus.
     function liquidate(address borrower, uint256 repayAmount) external {
         require(repayAmount > 0, "Repay amount must be greater than zero");
-        uint256 borrowed = borrowing.borrowedBalance(borrower);
+        uint256 borrowed = borrowing.borrowedPrincipal(borrower);
         require(borrowed > 0, "Borrower has no debt");
 
         uint256 userCollateral = collateralBalance[borrower];
