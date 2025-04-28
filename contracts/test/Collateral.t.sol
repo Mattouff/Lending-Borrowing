@@ -68,7 +68,7 @@ contract CollateralTest is Test {
         vm.prank(user);
         collateral.depositCollateral(depositAmount);
 
-        mockBorrowing.setBorrowedBalance(user, 50 * 10 ** 18);
+        mockBorrowing.setBorrowedPrincipal(user, 50 * 10 ** 18);
 
         uint256 withdrawAmount = 50 * 10 ** 18;
         vm.prank(user);
@@ -108,7 +108,7 @@ contract CollateralTest is Test {
         vm.prank(user);
         collateral.depositCollateral(depositAmount);
 
-        mockBorrowing.setBorrowedBalance(user, 100 * 10 ** 18);
+        mockBorrowing.setBorrowedPrincipal(user, 100 * 10 ** 18);
 
         uint256 withdrawAmount = 10 * 10 ** 18;
         vm.prank(user);
@@ -195,7 +195,7 @@ contract CollateralTest is Test {
         token.approve(address(collateral), depositAmount);
         vm.prank(user);
         collateral.depositCollateral(depositAmount);
-        mockBorrowing.setBorrowedBalance(user, 50 * 10 ** 18);
+        mockBorrowing.setBorrowedPrincipal(user, 50 * 10 ** 18);
         uint256 ratio = collateral.getCollateralRatio(user);
         assertEq(ratio, 300, "Collateral ratio should be 300");
     }
@@ -211,7 +211,7 @@ contract CollateralTest is Test {
         bool canBorrow1 = collateral.canBorrow(user, 0);
         assertTrue(canBorrow1, "Should allow borrowing when no borrow");
 
-        mockBorrowing.setBorrowedBalance(user, 50 * 10 ** 18);
+        mockBorrowing.setBorrowedPrincipal(user, 50 * 10 ** 18);
         bool canBorrow2 = collateral.canBorrow(user, 10 * 10 ** 18);
         assertTrue(canBorrow2, "Should allow borrowing additional amount");
         bool canBorrow3 = collateral.canBorrow(user, 100 * 10 ** 18);
@@ -243,7 +243,7 @@ contract CollateralTest is Test {
 
         // Simuler une dette élevée pour rendre le ratio insuffisant :
         // Par exemple, une dette de 130 tokens donne un ratio ≈115% (< seuil de liquidation, supposé 125%).
-        mockBorrowing.setBorrowedBalance(borrower, 130 * 10 ** 18);
+        mockBorrowing.setBorrowedPrincipal(borrower, 130 * 10 ** 18);
         // IMPORTANT : s'assurer que le contrat Borrowing connaît l'adresse correcte du contrat Collateral
         mockBorrowing.setCollateral(address(collateral));
 
@@ -264,7 +264,7 @@ contract CollateralTest is Test {
         vm.prank(liquidator);
         collateral.liquidate(borrower, repayAmount);
 
-        uint256 newDebt = mockBorrowing.borrowedBalance(borrower);
+        uint256 newDebt = mockBorrowing.borrowedPrincipal(borrower);
         assertEq(newDebt, (130 - 50) * 10 ** 18, "Borrower's debt not reduced correctly");
 
         // Supposons LIQUIDATION_BONUS = 10, alors collateralToSeize = 50 * 110/100 = 55 tokens.
@@ -287,7 +287,7 @@ contract CollateralTest is Test {
         vm.prank(borrower);
         collateral.depositCollateral(depositCollateral);
 
-        mockBorrowing.setBorrowedBalance(borrower, 100 * 10 ** 18);
+        mockBorrowing.setBorrowedPrincipal(borrower, 100 * 10 ** 18);
 
         uint256 repayAmount = 50 * 10 ** 18;
         vm.prank(liquidator);

@@ -4,28 +4,32 @@ pragma solidity 0.8.29;
 /// @title MockBorrowingForCollateral
 /// @notice A minimal mock for Borrowing used for testing Collateral; it allows setting and retrieving a user's borrowed balance.
 contract MockBorrowingForCollateral {
-    mapping(address => uint256) private _borrowedBalance;
+    mapping(address => uint256) private _borrowedPrincipal;
     address private _collateral;
 
     /// @notice Sets the borrowed balance for a user.
     /// @param user The address of the user.
     /// @param amount The borrowed balance to set.
-    function setBorrowedBalance(address user, uint256 amount) external {
-        _borrowedBalance[user] = amount;
+    function setBorrowedPrincipal(address user, uint256 amount) external {
+        _borrowedPrincipal[user] = amount;
     }
 
     /// @notice Returns the borrowed balance for a user.
     /// @param user The address of the user.
     /// @return The borrowed balance.
-    function getBorrowedBalance(address user) external view returns (uint256) {
-        return _borrowedBalance[user];
+    function getBorrowedPrincipal(address user) external view returns (uint256) {
+        return _borrowedPrincipal[user];
     }
 
     /// @notice Mimics the public getter in the original Borrowing contract.
     /// @param user The address of the user.
     /// @return The borrowed balance.
-    function borrowedBalance(address user) external view returns (uint256) {
-        return _borrowedBalance[user];
+    function borrowedPrincipal(address user) external view returns (uint256) {
+        return _borrowedPrincipal[user];
+    }
+
+    function getBorrowToken(address user) external view returns (uint256) {
+        return _borrowedPrincipal[user];
     }
 
     /// @notice Sets the collateral contract address.
@@ -46,7 +50,7 @@ contract MockBorrowingForCollateral {
     /// @param amount The amount by which to reduce the debt.
     function reduceDebt(address borrower, uint256 amount) external {
         require(msg.sender == _collateral, "Not authorized");
-        require(_borrowedBalance[borrower] >= amount, "Insufficient debt");
-        _borrowedBalance[borrower] -= amount;
+        require(_borrowedPrincipal[borrower] >= amount, "Insufficient debt");
+        _borrowedPrincipal[borrower] -= amount;
     }
 }
