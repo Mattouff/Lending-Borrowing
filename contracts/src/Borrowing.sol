@@ -3,6 +3,7 @@ pragma solidity 0.8.29;
 
 import "./Token.sol";
 import "./Collateral.sol";
+import "./libraries/CompoundInterest.sol";
 
 /// @title Borrowing - A contract to manage borrowing operations for a decentralized lending platform.
 /// @notice Users can borrow tokens and repay their loans. Borrowing limits are defined by the collateral managed in Collateral.sol.
@@ -86,27 +87,12 @@ contract Borrowing {
 
         uint256 currentRate = getCurrentRate();
 
-        // Calculate compound interest: A = P × (1 + r/n)^(n×t)
-        // For simplicity and as agreed, we'll use daily compounding (n = 365)
-        // timeElapsed is in seconds, so we convert to days for the formula
-        uint256 daysElapsed = timeElapsed / (1 days);
-        if (daysElapsed > 0) {
-            uint256 dailyRate = currentRate / 365; // Daily rate
+        (uint256 newBalance, uint256 interest) =
+            CompoundInterest.calculateCompoundInterest(principal, currentRate, timeElapsed);
 
-            // Calculate compound factor: (1 + r/n)^(days)
-            uint256 compoundFactor = 1e18; // Start with 1 in fixed-point
-            for (uint256 i = 0; i < daysElapsed; i++) {
-                compoundFactor = (compoundFactor * (1e18 + dailyRate)) / 1e18;
-            }
-
-            // Calculate new balance with compound interest
-            uint256 newBalance = (principal * compoundFactor) / 1e18;
-            uint256 interest = newBalance - principal;
-
-            if (interest > 0) {
-                borrowedPrincipal[user] += interest;
-                totalBorrowed += interest;
-            }
+        if (interest > 0) {
+            borrowedPrincipal[user] += interest;
+            totalBorrowed += interest;
         }
     }
 
@@ -161,25 +147,10 @@ contract Borrowing {
 
         uint256 principal = borrowedPrincipal[user];
         uint256 currentRate = getCurrentRate();
-        
-        // Calculate compound interest using the same logic as updateBorrowedPrincipal
-        uint256 daysElapsed = timeElapsed / (1 days);
-        if (daysElapsed > 0) {
-            uint256 dailyRate = currentRate / 365; // Daily rate
-            
-            // Calculate compound factor: (1 + r/n)^(days)
-            uint256 compoundFactor = 1e18; // Start with 1 in fixed-point
-            for (uint256 i = 0; i < daysElapsed; i++) {
-                compoundFactor = (compoundFactor * (1e18 + dailyRate)) / 1e18;
-            }
-            
-            uint256 newBalance = (principal * compoundFactor) / 1e18;
-            return newBalance;
-        }
-        
-        // If less than a day has elapsed, fall back to simple interest for partial days
-        uint256 interest = (principal * currentRate * timeElapsed) / (365 days * 1e18);
-        return principal + interest;
+
+        (uint256 newBalance,) = CompoundInterest.calculateCompoundInterest(principal, currentRate, timeElapsed);
+
+        return newBalance;
     }
 
     /// @notice Gets the total borrowed tokens across all users.

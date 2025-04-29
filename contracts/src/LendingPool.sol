@@ -3,6 +3,7 @@ pragma solidity 0.8.29;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./Token.sol";
+import "./libraries/CompoundInterest.sol";
 
 /// @title LendingPool - A contract to manage deposits for a decentralized lending platform.
 /// @notice Users deposit ERC20 tokens (defined in Token.sol) and receive deposit tokens (dToken) representing their share in the pool.
@@ -49,29 +50,13 @@ contract LendingPool is ERC20 {
             return;
         }
 
-        // Calculate compound interest: A = P × (1 + r/n)^(n×t)
-        // For simplicity and as agreed, we'll use daily compounding (n = 365)
-        // timeElapsed is in seconds, so we convert to days for the formula
-        uint256 daysElapsed = timeElapsed / (1 days);
+        (uint256 newBalance, uint256 interest) =
+            CompoundInterest.calculateCompoundInterest(balance, annualInterestRate, timeElapsed);
 
-        if (daysElapsed > 0) {
-            uint256 dailyRate = annualInterestRate / 365; // Daily rate
-
-            // Calculate compound factor: (1 + r/n)^(days)
-            uint256 compoundFactor = 1e18; // Start with 1 in fixed-point
-            for (uint256 i = 0; i < daysElapsed; i++) {
-                compoundFactor = (compoundFactor * (1e18 + dailyRate)) / 1e18;
-            }
-
-            // Calculate new balance with compound interest
-            uint256 newBalance = (balance * compoundFactor) / 1e18;
-            uint256 interest = newBalance - balance;
-
-            if (interest > 0) {
-                lendingBalance[user] += interest;
-                totalLending += interest;
-                _mint(user, interest);
-            }
+        if (interest > 0) {
+            lendingBalance[user] += interest;
+            totalLending += interest;
+            _mint(user, interest);
         }
     }
 
