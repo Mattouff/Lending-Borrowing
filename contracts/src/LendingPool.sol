@@ -3,6 +3,7 @@ pragma solidity 0.8.29;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./Token.sol";
+import "./libraries/CompoundInterest.sol";
 
 /// @title LendingPool - A contract to manage deposits for a decentralized lending platform.
 /// @notice Users deposit ERC20 tokens (defined in Token.sol) and receive deposit tokens (dToken) representing their share in the pool.
@@ -34,30 +35,29 @@ contract LendingPool is ERC20 {
     /// @param user The address of the user.
     function updateInterest(address user) internal {
         uint256 lastTime = lastUpdate[user];
-        uint256 currentTime = block.timestamp;
+        lastUpdate[user] = block.timestamp;
 
-        // Si c'est le premier update ou aucun temps n'a passé, on sort
+        // If it's the first update or no time has passed, exit early
         if (lastTime == 0) {
-            lastUpdate[user] = currentTime;
             return;
         }
 
-        // Vérifier s'il y a eu un passage de temps et si l'utilisateur a un solde
-        uint256 timeElapsed = currentTime - lastTime;
-        if (timeElapsed > 0 && lendingBalance[user] > 0) {
-            // Calculer l'intérêt proportionnel
-            uint256 interest = (lendingBalance[user] * annualInterestRate * timeElapsed) / (365 days * 1e18);
+        // Check if time has elapsed and user has a balance
+        uint256 timeElapsed = block.timestamp - lastTime;
+        uint256 balance = lendingBalance[user];
 
-            // S'assurer que l'intérêt est positif avant de l'ajouter
-            if (interest > 0) {
-                lendingBalance[user] += interest;
-                totalLending += interest;
-                _mint(user, interest);
-            }
+        if (timeElapsed == 0 || balance == 0) {
+            return;
         }
 
-        // Mettre à jour le timestamp du dernier update
-        lastUpdate[user] = currentTime;
+        (uint256 newBalance, uint256 interest) =
+            CompoundInterest.calculateCompoundInterest(balance, annualInterestRate, timeElapsed);
+
+        if (interest > 0) {
+            lendingBalance[user] += interest;
+            totalLending += interest;
+            _mint(user, interest);
+        }
     }
 
     /// @notice External function to update accrued interest for a user.

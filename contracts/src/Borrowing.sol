@@ -3,6 +3,7 @@ pragma solidity 0.8.29;
 
 import "./Token.sol";
 import "./Collateral.sol";
+import "./libraries/CompoundInterest.sol";
 
 /// @title Borrowing - A contract to manage borrowing operations for a decentralized lending platform.
 /// @notice Users can borrow tokens and repay their loans. Borrowing limits are defined by the collateral managed in Collateral.sol.
@@ -85,7 +86,9 @@ contract Borrowing {
         }
 
         uint256 currentRate = getCurrentRate();
-        uint256 interest = (principal * currentRate * timeElapsed) / (365 days * 1e18);
+
+        (uint256 newBalance, uint256 interest) =
+            CompoundInterest.calculateCompoundInterest(principal, currentRate, timeElapsed);
 
         if (interest > 0) {
             borrowedPrincipal[user] += interest;
@@ -144,9 +147,10 @@ contract Borrowing {
 
         uint256 principal = borrowedPrincipal[user];
         uint256 currentRate = getCurrentRate();
-        uint256 interest = (principal * currentRate * timeElapsed) / (365 days * 1e18);
 
-        return principal + interest;
+        (uint256 newBalance,) = CompoundInterest.calculateCompoundInterest(principal, currentRate, timeElapsed);
+
+        return newBalance;
     }
 
     /// @notice Gets the total borrowed tokens across all users.
