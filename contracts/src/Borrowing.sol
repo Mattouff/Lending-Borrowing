@@ -85,11 +85,28 @@ contract Borrowing {
         }
 
         uint256 currentRate = getCurrentRate();
-        uint256 interest = (principal * currentRate * timeElapsed) / (365 days * 1e18);
 
-        if (interest > 0) {
-            borrowedPrincipal[user] += interest;
-            totalBorrowed += interest;
+        // Calculate compound interest: A = P × (1 + r/n)^(n×t)
+        // For simplicity and as agreed, we'll use daily compounding (n = 365)
+        // timeElapsed is in seconds, so we convert to days for the formula
+        uint256 daysElapsed = timeElapsed / (1 days);
+        if (daysElapsed > 0) {
+            uint256 dailyRate = currentRate / 365; // Daily rate
+
+            // Calculate compound factor: (1 + r/n)^(days)
+            uint256 compoundFactor = 1e18; // Start with 1 in fixed-point
+            for (uint256 i = 0; i < daysElapsed; i++) {
+                compoundFactor = (compoundFactor * (1e18 + dailyRate)) / 1e18;
+            }
+
+            // Calculate new balance with compound interest
+            uint256 newBalance = (principal * compoundFactor) / 1e18;
+            uint256 interest = newBalance - principal;
+
+            if (interest > 0) {
+                borrowedPrincipal[user] += interest;
+                totalBorrowed += interest;
+            }
         }
     }
 

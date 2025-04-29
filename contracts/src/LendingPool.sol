@@ -34,30 +34,45 @@ contract LendingPool is ERC20 {
     /// @param user The address of the user.
     function updateInterest(address user) internal {
         uint256 lastTime = lastUpdate[user];
-        uint256 currentTime = block.timestamp;
+        lastUpdate[user] = block.timestamp;
 
-        // Si c'est le premier update ou aucun temps n'a passé, on sort
+        // If it's the first update or no time has passed, exit early
         if (lastTime == 0) {
-            lastUpdate[user] = currentTime;
             return;
         }
 
-        // Vérifier s'il y a eu un passage de temps et si l'utilisateur a un solde
-        uint256 timeElapsed = currentTime - lastTime;
-        if (timeElapsed > 0 && lendingBalance[user] > 0) {
-            // Calculer l'intérêt proportionnel
-            uint256 interest = (lendingBalance[user] * annualInterestRate * timeElapsed) / (365 days * 1e18);
+        // Check if time has elapsed and user has a balance
+        uint256 timeElapsed = block.timestamp - lastTime;
+        uint256 balance = lendingBalance[user];
 
-            // S'assurer que l'intérêt est positif avant de l'ajouter
+        if (timeElapsed == 0 || balance == 0) {
+            return;
+        }
+
+        // Calculate compound interest: A = P × (1 + r/n)^(n×t)
+        // For simplicity and as agreed, we'll use daily compounding (n = 365)
+        // timeElapsed is in seconds, so we convert to days for the formula
+        uint256 daysElapsed = timeElapsed / (1 days);
+
+        if (daysElapsed > 0) {
+            uint256 dailyRate = annualInterestRate / 365; // Daily rate
+
+            // Calculate compound factor: (1 + r/n)^(days)
+            uint256 compoundFactor = 1e18; // Start with 1 in fixed-point
+            for (uint256 i = 0; i < daysElapsed; i++) {
+                compoundFactor = (compoundFactor * (1e18 + dailyRate)) / 1e18;
+            }
+
+            // Calculate new balance with compound interest
+            uint256 newBalance = (balance * compoundFactor) / 1e18;
+            uint256 interest = newBalance - balance;
+
             if (interest > 0) {
                 lendingBalance[user] += interest;
                 totalLending += interest;
                 _mint(user, interest);
             }
         }
-
-        // Mettre à jour le timestamp du dernier update
-        lastUpdate[user] = currentTime;
     }
 
     /// @notice External function to update accrued interest for a user.
