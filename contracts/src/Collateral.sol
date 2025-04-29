@@ -92,6 +92,21 @@ contract Collateral {
         return sufficientCollateral && withinMaxLimit;
     }
 
+    /// @notice Calculate the maximum amount a user can borrow based on their collateral
+    /// @param user The address of the user
+    /// @return The maximum amount the user can borrow
+    function getMaxBorrowableAmount(address user) external view returns (uint256) {
+        uint256 collateralValue = collateralBalance[user];
+
+        // Using the formula: L_max = Value of Collateral / C_min * MAX_BORROWING_PERCENTAGE / 100
+        // Applying both the minimum collateral ratio and maximum borrowing percentage
+        uint256 basedOnMinRatio = (collateralValue * 100) / MIN_COLLATERAL_RATIO;
+        uint256 basedOnMaxPercentage = (collateralValue * MAX_BORROWING_PERCENTAGE) / 100;
+
+        // Return the lower of the two constraint
+        return basedOnMinRatio < basedOnMaxPercentage ? basedOnMinRatio : basedOnMaxPercentage;
+    }
+
     /// @notice Liquidates an undercollateralized borrower's position if the collateral crash.
     /// @param borrower The address of the borrower to be liquidated.
     /// @param repayAmount The amount of debt the liquidator is willing to repay.
