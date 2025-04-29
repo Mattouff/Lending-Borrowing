@@ -320,9 +320,17 @@ contract BorrowingTest is Test {
         uint256 newBorrowedAmount = borrowing.getBorrowToken(user);
         assertGt(newBorrowedAmount, initialBorrowedAmount, "Interest should accrue after time passes");
 
-        // Calculate expected interest and check it's roughly correct
-        uint256 expectedInterest = (initialBorrowedAmount * borrowing.getCurrentRate() * 365 days) / (365 days * 1e18);
-        uint256 expectedTotal = initialBorrowedAmount + expectedInterest;
+        // Calculate expected compound interest
+        uint256 currentRate = borrowing.getCurrentRate();
+        uint256 dailyRate = currentRate / 365;
+
+        // Calculate the compound factor: (1 + dailyRate)^365
+        uint256 compoundFactor = 1e18;
+        for (uint256 i = 0; i < 365; i++) {
+            compoundFactor = (compoundFactor * (1e18 + dailyRate)) / 1e18;
+        }
+
+        uint256 expectedTotal = (initialBorrowedAmount * compoundFactor) / 1e18;
 
         // Allow for small precision errors with a delta
         assertApproxEqAbs(newBorrowedAmount, expectedTotal, 100, "Interest calculation should be approximately correct");
