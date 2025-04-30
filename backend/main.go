@@ -10,7 +10,7 @@ import (
 	_ "github.com/swaggo/fiber-swagger"
 	"gorm.io/gorm"
 
-	"github.com/Mattouff/Lending-Borrowing/api/routes"
+	"github.com/Mattouff/Lending-Borrowing/internal/api/routes"
 	"github.com/Mattouff/Lending-Borrowing/pkg/database"
 )
 
