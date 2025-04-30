@@ -433,4 +433,93 @@ contract CollateralTest is Test {
         vm.expectRevert("Collateral withdrawal transfer failed");
         collateralWithMock.withdrawCollateral(50 * 10 ** 18);
     }
+
+    /// @notice Tests the getMaxBorrowableAmount function with no collateral
+    function testGetMaxBorrowableAmountNoCollateral() public {
+        uint256 maxAmount = collateral.getMaxBorrowableAmount(user);
+        assertEq(maxAmount, 0, "Max borrowable amount should be 0 with no collateral");
+    }
+
+    /// @notice Tests the getMaxBorrowableAmount function with collateral where MIN_COLLATERAL_RATIO is the limiting factor
+    function testGetMaxBorrowableAmountLimitedByRatio() public {
+        uint256 depositAmount = 150 * 10 ** 18;
+        vm.prank(user);
+        token.approve(address(collateral), depositAmount);
+        vm.prank(user);
+        collateral.depositCollateral(depositAmount);
+
+        // Based on MIN_COLLATERAL_RATIO = 150, max borrowable = 150 * 100 / 150 = 100 tokens
+        // Based on MAX_BORROWING_PERCENTAGE = 75, max borrowable = 150 * 75 / 100 = 112.5 tokens
+        // Should return 100 tokens (limited by MIN_COLLATERAL_RATIO)
+        uint256 maxAmount = collateral.getMaxBorrowableAmount(user);
+        assertEq(maxAmount, 100 * 10 ** 18, "Max borrowable amount should be limited by MIN_COLLATERAL_RATIO");
+    }
+
+    /// @notice Tests the getMaxBorrowableAmount function with collateral where MAX_BORROWING_PERCENTAGE is the limiting factor
+    function testGetMaxBorrowableAmountLimitedByMaxPercentage() public {
+        // Transfer more tokens to the user first
+        vm.prank(address(this));
+        token.transfer(user, 300 * 10 ** 18);
+
+        // Use a larger collateral amount to make MAX_BORROWING_PERCENTAGE the limiting factor
+        uint256 depositAmount = 300 * 10 ** 18;
+        vm.prank(user);
+        token.approve(address(collateral), depositAmount);
+        vm.prank(user);
+        collateral.depositCollateral(depositAmount);
+
+        // Based on MIN_COLLATERAL_RATIO = 150, max borrowable = 300 * 100 / 150 = 200 tokens
+        // Based on MAX_BORROWING_PERCENTAGE = 75, max borrowable = 300 * 75 / 100 = 225 tokens
+        // Should return 200 tokens (limited by MIN_COLLATERAL_RATIO)
+        uint256 maxAmount = collateral.getMaxBorrowableAmount(user);
+        assertEq(maxAmount, 200 * 10 ** 18, "Max borrowable amount should be limited by MIN_COLLATERAL_RATIO");
+    }
+
+    /// @notice Tests that getMaxBorrowableAmount returns the correct amount regardless of existing borrowed amount
+    function testGetMaxBorrowableAmountWithExistingBorrow() public {
+        uint256 depositAmount = 150 * 10 ** 18;
+        vm.prank(user);
+        token.approve(address(collateral), depositAmount);
+        vm.prank(user);
+        collateral.depositCollateral(depositAmount);
+
+        // Set an existing borrowed amount
+        mockBorrowing.setBorrowedPrincipal(user, 50 * 10 ** 18);
+
+        // The max borrowable amount should still be 100 tokens, as it's based only on collateral
+        uint256 maxAmount = collateral.getMaxBorrowableAmount(user);
+        assertEq(maxAmount, 100 * 10 ** 18, "Max borrowable should be based only on collateral, not existing borrow");
+    }
+
+    /// @notice Tests that getMaxBorrowableAmount works with edge case values
+    function testGetMaxBorrowableAmountEdgeCases() public {
+        // Test with minimum possible collateral
+        uint256 minDeposit = 1;
+        vm.prank(user);
+        token.approve(address(collateral), minDeposit);
+        vm.prank(user);
+        collateral.depositCollateral(minDeposit);
+
+        uint256 maxAmount = collateral.getMaxBorrowableAmount(user);
+        // Expected: 1 * 100 / 150 = 0 (integer division rounds down)
+        assertEq(maxAmount, 0, "Max borrowable should be 0 for minimal collateral");
+
+        // Clean up for next test
+        vm.prank(user);
+        collateral.withdrawCollateral(minDeposit);
+
+        // Test with large collateral
+        uint256 largeDeposit = 800 * 10 ** 18;
+        vm.prank(address(this));
+        token.transfer(user, largeDeposit);
+
+        vm.prank(user);
+        token.approve(address(collateral), largeDeposit);
+        vm.prank(user);
+        collateral.depositCollateral(largeDeposit);
+
+        maxAmount = collateral.getMaxBorrowableAmount(user);
+        // Expected: 800 * 100 / 150 = 533.33... tokens
+        assertEq(maxAmount, 533333333333333333333, "Max borrowable should calculate correctly for large deposits");
+    }
 }

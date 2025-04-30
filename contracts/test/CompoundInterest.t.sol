@@ -15,7 +15,7 @@ contract CompoundInterestTest is Test {
     }
 
     /// @notice Tests the early return condition when principal is zero
-    function testCalculateCompoundInterestZeroPrincipal() pure public {
+    function testCalculateCompoundInterestZeroPrincipal() public pure {
         uint256 annualRate = 5e16; // 5%
         uint256 timeElapsed = 365 days;
 
@@ -26,7 +26,7 @@ contract CompoundInterestTest is Test {
     }
 
     /// @notice Tests the early return condition when timeElapsed is zero
-    function testCalculateCompoundInterestZeroTimeElapsed() pure public {
+    function testCalculateCompoundInterestZeroTimeElapsed() public pure {
         uint256 principal = 100e18;
         uint256 annualRate = 5e16; // 5%
 
@@ -37,7 +37,7 @@ contract CompoundInterestTest is Test {
     }
 
     /// @notice Tests the early return condition when days elapsed is less than 1
-    function testCalculateCompoundInterestLessThanOneDay() pure public {
+    function testCalculateCompoundInterestLessThanOneDay() public pure {
         uint256 principal = 100e18;
         uint256 annualRate = 5e16; // 5%
         uint256 timeElapsed = 23 hours; // Less than 1 day
@@ -49,7 +49,7 @@ contract CompoundInterestTest is Test {
     }
 
     /// @notice Tests exactly one day of interest
-    function testCalculateCompoundInterestExactlyOneDay() pure public {
+    function testCalculateCompoundInterestExactlyOneDay() public pure {
         uint256 principal = 100e18;
         uint256 annualRate = 5e16; // 5%
         uint256 timeElapsed = 1 days; // Exactly 1 day
@@ -65,7 +65,7 @@ contract CompoundInterestTest is Test {
     }
 
     /// @notice Tests normal computation with multiple days
-    function testCalculateCompoundInterestNormalCase() pure public {
+    function testCalculateCompoundInterestNormalCase() public pure {
         uint256 principal = 1000e18;
         uint256 annualRate = 5e16; // 5%
         uint256 timeElapsed = 30 days; // 30 days
@@ -86,7 +86,7 @@ contract CompoundInterestTest is Test {
     }
 
     /// @notice Tests that interest compounds correctly for a full year
-    function testCalculateCompoundInterestFullYear() pure public {
+    function testCalculateCompoundInterestFullYear() public pure {
         uint256 principal = 1000e18;
         uint256 annualRate = 5e16; // 5%
         uint256 timeElapsed = 365 days; // Full year
