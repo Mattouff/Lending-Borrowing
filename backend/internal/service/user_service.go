@@ -1,0 +1,142 @@
+package service
+
+import (
+	"context"
+	"errors"
+	"time"
+
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/golang-jwt/jwt/v4"
+
+	"github.com/Mattouff/Lending-Borrowing/internal/config"
+	"github.com/Mattouff/Lending-Borrowing/internal/domain/models"
+	"github.com/Mattouff/Lending-Borrowing/internal/domain/repository"
+	"github.com/Mattouff/Lending-Borrowing/internal/domain/service"
+	"fmt"
+)
+
+type userService struct {
+	userRepo repository.UserRepository
+	cfg      *config.Config
+}
+
+// NewUserService creates a new user service
+func NewUserService(userRepo repository.UserRepository, cfg *config.Config) service.UserService {
+	return &userService{
+		userRepo: userRepo,
+		cfg:      cfg,
+	}
+}
+
+// Register creates a new user
+func (s *userService) Register(ctx context.Context, address, username, email string) (*models.User, error) {
+	// Validate the Ethereum address
+	if !common.IsHexAddress(address) {
+		return nil, errors.New("invalid ethereum address")
+	}
+
+	// Check if user already exists
+	existingUser, err := s.userRepo.FindByAddress(ctx, address)
+	if err == nil && existingUser != nil {
+		return nil, errors.New("user with this address already exists")
+	}
+
+	// Create a random nonce for the user
+	nonce := crypto.Keccak256Hash([]byte(time.Now().String())).Hex()
+
+	user := &models.User{
+		Address:   address,
+		Username:  username,
+		Email:     email,
+		Role:      models.RoleUser,
+		Verified:  false,
+		Nonce:     nonce,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	if err := s.userRepo.Create(ctx, user); err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+// GetByID retrieves a user by ID
+func (s *userService) GetByID(ctx context.Context, id uint) (*models.User, error) {
+	return s.userRepo.FindByID(ctx, id)
+}
+
+// GetByAddress retrieves a user by Ethereum address
+func (s *userService) GetByAddress(ctx context.Context, address string) (*models.User, error) {
+	return s.userRepo.FindByAddress(ctx, address)
+}
+
+// Update updates an existing user
+func (s *userService) Update(ctx context.Context, user *models.User) error {
+	user.UpdatedAt = time.Now()
+	return s.userRepo.Update(ctx, user)
+}
+
+// VerifySignature verifies that a signature was created by the user's address
+func (s *userService) VerifySignature(ctx context.Context, address, message, signature string) (bool, error) {
+	// Convert the signature to the appropriate format
+	sig := common.FromHex(signature)
+	if len(sig) != 65 {
+		return false, errors.New("invalid signature length")
+	}
+
+	// Ethereum message prefix
+	prefix := "\x19Ethereum Signed Message:\n" + fmt.Sprint(len(message)) + message
+	prefixedHash := crypto.Keccak256Hash([]byte(prefix))
+
+	// Check if V needs adjustment for Ethereum's quirks
+	if sig[64] > 26 {
+		sig[64] -= 27
+	}
+
+	// Recover the public key from the signature
+	pubKey, err := crypto.Ecrecover(prefixedHash.Bytes(), sig)
+	if err != nil {
+		return false, err
+	}
+
+	// Convert the public key to an Ethereum address
+	recoveredAddr := common.BytesToAddress(crypto.Keccak256(pubKey[1:])[12:])
+
+	// Compare with the provided address
+	return recoveredAddr.Hex() == common.HexToAddress(address).Hex(), nil
+}
+
+// GenerateAuthToken generates an authentication token for a user
+func (s *userService) GenerateAuthToken(ctx context.Context, user *models.User) (string, error) {
+	// Create JWT claims
+	claims := jwt.MapClaims{
+		"address": user.Address,
+		"id":      user.ID,
+		"role":    user.Role,
+		"exp":     time.Now().Add(time.Duration(s.cfg.JWT.ExpireTime) * time.Hour).Unix(),
+	}
+
+	// Create token with claims
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// Sign the token with the secret key
+	tokenString, err := token.SignedString([]byte(s.cfg.JWT.Secret))
+	if err != nil {
+		return "", err
+	}
+
+	// Update user's last login time
+	now := time.Now()
+	user.LastLogin = &now
+	s.userRepo.Update(ctx, user)
+
+	return tokenString, nil
+}
+
+// ListUsers retrieves all users with optional pagination
+func (s *userService) ListUsers(ctx context.Context, offset, limit int) ([]*models.User, error) {
+	return s.userRepo.List(ctx, offset, limit)
+}
