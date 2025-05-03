@@ -10,7 +10,6 @@ import (
 	_ "github.com/swaggo/fiber-swagger"
 	"gorm.io/gorm"
 
-	"github.com/Mattouff/Lending-Borrowing/internal/api/routes"
 	"github.com/Mattouff/Lending-Borrowing/internal/config"
 	"github.com/Mattouff/Lending-Borrowing/internal/infrastructure/blockchain"
 	"github.com/Mattouff/Lending-Borrowing/pkg/database"
@@ -86,6 +85,6 @@ func main() {
 }
 
 func setupRoutes(api fiber.Router, db *gorm.DB) {
-	routes.SetupUserRoutes(api, db)
+	//routes.SetupUserRoutes(api, db)
 	// Add more routes as needed
 }
