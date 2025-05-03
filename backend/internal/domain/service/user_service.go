@@ -28,4 +28,10 @@ type UserService interface {
 
 	// ListUsers retrieves all users with optional pagination
 	ListUsers(ctx context.Context, offset, limit int) ([]*models.User, error)
+
+	// GenerateNonce generates a new nonce for signature verification
+	GenerateNonce(address string) string
+
+	// Count returns the total number of users
+	Count(ctx context.Context) (int64, error)
 }

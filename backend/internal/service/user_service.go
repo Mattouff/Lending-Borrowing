@@ -9,11 +9,12 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/golang-jwt/jwt/v4"
 
+	"fmt"
+
 	"github.com/Mattouff/Lending-Borrowing/internal/config"
 	"github.com/Mattouff/Lending-Borrowing/internal/domain/models"
 	"github.com/Mattouff/Lending-Borrowing/internal/domain/repository"
 	"github.com/Mattouff/Lending-Borrowing/internal/domain/service"
-	"fmt"
 )
 
 type userService struct {
@@ -139,4 +140,17 @@ func (s *userService) GenerateAuthToken(ctx context.Context, user *models.User) 
 // ListUsers retrieves all users with optional pagination
 func (s *userService) ListUsers(ctx context.Context, offset, limit int) ([]*models.User, error) {
 	return s.userRepo.List(ctx, offset, limit)
+}
+
+// GenerateNonce generates a new nonce for signature verification
+func (s *userService) GenerateNonce(address string) string {
+	// Create a random nonce by hashing the address with a timestamp
+	timestamp := time.Now().String()
+	data := address + timestamp
+	return crypto.Keccak256Hash([]byte(data)).Hex()
+}
+
+// Count returns the total number of users
+func (s *userService) Count(ctx context.Context) (int64, error) {
+	return s.userRepo.Count(ctx)
 }
