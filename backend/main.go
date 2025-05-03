@@ -21,6 +21,9 @@ import (
 // @description API for decentralized lending and borrowing platform
 // @host localhost:8080
 // @BasePath /api/v1
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
 	// Load environment variables and configuration
 	if err := config.LoadEnv(""); err != nil {
@@ -122,7 +125,15 @@ func main() {
 		LiquidationService: liquidationService,
 	}
 
-	routes.SetupRoutes(app, services, cfg)
+	// Create repositories container to pass to routes
+	repositories := &routes.Repositories{
+		UserRepository:        userRepo,
+		PositionRepository:    positionRepo,
+		TransactionRepository: transactionRepo,
+	}
+
+	// Setup routes with both services and repositories
+	routes.SetupRoutes(app, services, repositories, cfg)
 
 	// Start server
 	serverAddr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)

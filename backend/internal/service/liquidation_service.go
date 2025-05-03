@@ -182,9 +182,19 @@ func (s *liquidationService) GetLiquidationBonus(ctx context.Context) (*big.Int,
 
 // GetLiquidationHistory returns the history of liquidation events
 func (s *liquidationService) GetLiquidationHistory(ctx context.Context, offset, limit int) ([]*models.Transaction, error) {
-	filter := map[string]interface{}{
+	filter := map[string]any{
 		"type": models.TransactionLiquidate,
 	}
 
 	return s.transactionRepo.List(ctx, filter, offset, limit)
+}
+
+// CountLiquidations counts the total number of liquidation transactions
+func (s *liquidationService) CountLiquidations(ctx context.Context) (int64, error) {
+	filter := map[string]any{
+		"type": models.TransactionLiquidate,
+	}
+
+	// Count the liquidation transactions
+	return s.transactionRepo.Count(ctx, filter)
 }

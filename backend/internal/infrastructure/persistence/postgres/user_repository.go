@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -86,5 +87,32 @@ func (r *userRepository) List(ctx context.Context, offset, limit int) ([]*models
 func (r *userRepository) Count(ctx context.Context) (int64, error) {
 	var count int64
 	err := r.db.WithContext(ctx).Model(&models.User{}).Count(&count).Error
+	return count, err
+}
+
+// Add this method to your userRepository implementation:
+
+// CountWithFilter counts users that match the given filter criteria
+func (r *userRepository) CountWithFilter(ctx context.Context, filter map[string]any) (int64, error) {
+	var count int64
+	query := r.db.WithContext(ctx).Model(&models.User{})
+
+	// Apply filters
+	for key, value := range filter {
+		// Special handling for time-based filters
+		if key == "last_login_after" {
+			if timeValue, ok := value.(time.Time); ok {
+				query = query.Where("last_login >= ?", timeValue)
+			}
+		} else if key == "last_login_before" {
+			if timeValue, ok := value.(time.Time); ok {
+				query = query.Where("last_login <= ?", timeValue)
+			}
+		} else {
+			query = query.Where(key+" = ?", value)
+		}
+	}
+
+	err := query.Count(&count).Error
 	return count, err
 }

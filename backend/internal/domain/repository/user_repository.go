@@ -28,4 +28,7 @@ type UserRepository interface {
 
 	// Count returns the total number of users
 	Count(ctx context.Context) (int64, error)
+
+	// CountWithFilter counts users that match the given filter criteria
+	CountWithFilter(ctx context.Context, filter map[string]any) (int64, error)
 }

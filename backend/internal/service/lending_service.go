@@ -175,3 +175,25 @@ func getTransactOpts(ctx context.Context, userAddress common.Address) (*bind.Tra
 	// This is just a placeholder
 	return nil, errors.New("transaction signing not implemented")
 }
+
+// CountUserTransactions counts the number of transactions for a user with optional filtering
+func (s *lendingService) CountUserTransactions(ctx context.Context, address common.Address, filter map[string]any) (int64, error) {
+	// Find the user by address
+	user, err := s.userRepo.FindByAddress(ctx, address.Hex())
+	if err != nil {
+		return 0, err
+	}
+
+	if user == nil {
+		return 0, errors.New("user not found")
+	}
+
+	// Add the user ID to the filter
+	if filter == nil {
+		filter = make(map[string]any)
+	}
+	filter["user_id"] = user.ID
+
+	// Count the transactions
+	return s.transactionRepo.Count(ctx, filter)
+}

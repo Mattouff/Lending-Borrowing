@@ -44,10 +44,10 @@ type Transaction struct {
 	Type         TransactionType   `json:"type" gorm:"type:varchar(20);not null"`
 	Status       TransactionStatus `json:"status" gorm:"type:varchar(20);not null;default:'pending'"`
 	Hash         string            `json:"hash" gorm:"type:varchar(66);unique"`
-	BlockNumber  *uint64           `json:"blockNumber"`
+	BlockNumber  uint64           `json:"blockNumber"`
 	Amount       string            `json:"amount" gorm:"type:varchar(78);not null"` // Big numbers stored as strings
 	TokenAddress string            `json:"tokenAddress" gorm:"type:varchar(42);not null"`
-	GasUsed      *uint64           `json:"gasUsed"`
+	GasUsed      uint64           `json:"gasUsed"`
 	GasPrice     string            `json:"gasPrice" gorm:"type:varchar(78)"` // Big numbers stored as strings
 	ErrorMessage string            `json:"errorMessage" gorm:"type:text"`
 	CreatedAt    time.Time         `json:"createdAt"`

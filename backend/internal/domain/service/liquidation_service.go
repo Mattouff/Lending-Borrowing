@@ -21,4 +21,7 @@ type LiquidationService interface {
 
 	// GetLiquidationHistory returns the history of liquidation events
 	GetLiquidationHistory(ctx context.Context, offset, limit int) ([]*models.Transaction, error)
+
+	// CountLiquidations counts the total number of liquidation transactions
+	CountLiquidations(ctx context.Context) (int64, error)
 }
