@@ -87,7 +87,7 @@ cd Lending-Borrowing
 2. Create environment files:
 
 ```bash
-cp backend/.env.example backend/.env.dev
+cp .env.example .env.dev
 # Edit .env.dev with your local settings
 ```
 
@@ -236,6 +236,94 @@ The API uses JWT for authentication. Include the token in your request header:
 ```
 Authorization: Bearer <your_jwt_token>
 ```
+
+### Authentication Workflow with Anvil
+
+For local development, you can use Anvil's private keys to sign authentication messages. Here's a complete workflow:
+
+#### 1. Start Anvil with a Specific Mnemonic
+
+```bash
+anvil --mnemonic "test test test test test test test test test test test junk"
+```
+
+This ensures consistent addresses and private keys across restarts.
+
+#### 2. Get a Nonce from the API
+
+Request a nonce for the Ethereum address you want to authenticate:
+
+```bash
+curl -X 'GET' \
+ 'http://localhost:8080/api/v1/users/nonce/0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266' \
+ -H 'accept: application/json'
+```
+
+Response:
+
+```json
+{
+"message": "Sign this message to verify you are the owner of 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266. Nonce: 123456",
+"nonce": "123456"
+}
+```
+
+#### 3. Sign the Nonce Message
+
+Use the `cast` command-line tool from Foundry to sign the message with the corresponding private key:
+
+```bash
+cast sign --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 "Sign this message to verify you are the owner of 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266. Nonce: 123456"
+```
+
+This will output a signature string.
+
+#### 4. Authenticate with the Signature
+
+Send the address and signature to the authentication endpoint:
+
+```bash
+curl -X 'POST' \
+ 'http://localhost:8080/api/v1/users/auth' \
+ -H 'accept: application/json' \
+ -H 'Content-Type: application/json' \
+ -d '{
+"address": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+"signature": "YOUR_SIGNATURE_FROM_STEP_3"
+}'
+```
+
+The response will include your JWT token:
+
+```json
+{
+"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+"expires_at": "2025-05-05T10:13:45Z"
+}
+```
+
+#### 5. Use the JWT Token for Authenticated Requests
+
+Include the token in the Authorization header for protected endpoints:
+
+```bash
+curl -X 'GET' \
+ 'http://localhost:8080/api/v1/borrowing/balance' \
+ -H 'accept: application/json' \
+ -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+```
+
+#### Default Anvil Accounts
+
+For convenience, here are the first few accounts from Anvil's default mnemonic:
+
+| Account    | Address                                    | Private Key                                                        |
+| ---------- | ------------------------------------------ | ------------------------------------------------------------------ |
+| Account #0 | 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 | 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 |
+| Account #1 | 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 | 0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d |
+| Account #2 | 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC | 0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a |
+| Account #3 | 0x90F79bf6EB2c4f870365E785982E1f101E93b906 | 0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6 |
+| Account #4 | 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65 | 0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a |
 
 ## Smart Contract Integration
 
