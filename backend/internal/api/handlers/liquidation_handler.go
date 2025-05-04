@@ -23,7 +23,19 @@ func NewLiquidationHandler(liquidationService service.LiquidationService) *Liqui
 	}
 }
 
-// Liquidate handles liquidating an under-collateralized position
+// Liquidate godoc
+// @Summary Liquidate under-collateralized position
+// @Description Liquidate a position that has fallen below minimum health factor
+// @Tags liquidation
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.TransactionLiquidationRequest true "Liquidation parameters"
+// @Success 200 {object} dto.APIResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /liquidation/liquidate [post]
 func (h *LiquidationHandler) Liquidate(c *fiber.Ctx) error {
 	// Extract the liquidator address from the authentication middleware
 	liquidatorAddress, ok := c.Locals("address").(string)
@@ -64,7 +76,15 @@ func (h *LiquidationHandler) Liquidate(c *fiber.Ctx) error {
 	})
 }
 
-// GetLiquidatablePositions returns positions that can be liquidated
+// GetLiquidatablePositions godoc
+// @Summary Get liquidatable positions
+// @Description Get list of positions that can be liquidated
+// @Tags liquidation
+// @Accept json
+// @Produce json
+// @Success 200 {object} dto.LiquidatablePositionsResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /liquidation/positions [get]
 func (h *LiquidationHandler) GetLiquidatablePositions(c *fiber.Ctx) error {
 	// Call the liquidation service to get liquidatable positions
 	positions, err := h.liquidationService.GetLiquidatablePositions(c.Context())
@@ -99,7 +119,17 @@ func (h *LiquidationHandler) GetLiquidatablePositions(c *fiber.Ctx) error {
 	})
 }
 
-// GetLiquidationHistory returns the history of liquidation events
+// GetLiquidationHistory godoc
+// @Summary Get liquidation history
+// @Description Get paginated history of liquidation events
+// @Tags liquidation
+// @Accept json
+// @Produce json
+// @Param page query int false "Page number (default: 1)"
+// @Param pageSize query int false "Page size (default: 10, max: 100)"
+// @Success 200 {object} dto.TransactionListResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /liquidation/history [get]
 func (h *LiquidationHandler) GetLiquidationHistory(c *fiber.Ctx) error {
 	// Get pagination parameters
 	page, _ := strconv.Atoi(c.Query("page", "1"))
@@ -141,7 +171,6 @@ func (h *LiquidationHandler) GetLiquidationHistory(c *fiber.Ctx) error {
 		}
 	}
 
-
 	// Get total count from service
 	total, err := h.liquidationService.CountLiquidations(c.Context())
 	if err != nil {
@@ -160,7 +189,15 @@ func (h *LiquidationHandler) GetLiquidationHistory(c *fiber.Ctx) error {
 	})
 }
 
-// GetLiquidationBonus returns the current liquidation bonus
+// GetLiquidationBonus godoc
+// @Summary Get liquidation bonus
+// @Description Get current liquidation bonus percentage
+// @Tags liquidation
+// @Accept json
+// @Produce json
+// @Success 200 {object} dto.APIResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /liquidation/bonus [get]
 func (h *LiquidationHandler) GetLiquidationBonus(c *fiber.Ctx) error {
 	// Call the liquidation service to get the liquidation bonus
 	bonus, err := h.liquidationService.GetLiquidationBonus(c.Context())

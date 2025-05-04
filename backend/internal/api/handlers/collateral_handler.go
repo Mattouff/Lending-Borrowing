@@ -22,7 +22,19 @@ func NewCollateralHandler(collateralService service.CollateralService) *Collater
 	}
 }
 
-// DepositCollateral handles depositing tokens as collateral
+// DepositCollateral godoc
+// @Summary Deposit collateral
+// @Description Deposit tokens as collateral to enable borrowing
+// @Tags collateral
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.TransactionRequest true "Collateral amount to deposit"
+// @Success 200 {object} dto.APIResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /collateral/deposit [post]
 func (h *CollateralHandler) DepositCollateral(c *fiber.Ctx) error {
 	// Extract the user address from the authentication middleware
 	address, ok := c.Locals("address").(string)
@@ -58,7 +70,19 @@ func (h *CollateralHandler) DepositCollateral(c *fiber.Ctx) error {
 	})
 }
 
-// WithdrawCollateral handles withdrawing tokens from collateral
+// WithdrawCollateral godoc
+// @Summary Withdraw collateral
+// @Description Withdraw deposited collateral if borrowing health factor permits
+// @Tags collateral
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.TransactionRequest true "Collateral amount to withdraw"
+// @Success 200 {object} dto.APIResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /collateral/withdraw [post]
 func (h *CollateralHandler) WithdrawCollateral(c *fiber.Ctx) error {
 	// Extract the user address from the authentication middleware
 	address, ok := c.Locals("address").(string)
@@ -94,7 +118,17 @@ func (h *CollateralHandler) WithdrawCollateral(c *fiber.Ctx) error {
 	})
 }
 
-// GetCollateralBalance returns the collateral balance of a user
+// GetCollateralBalance godoc
+// @Summary Get collateral balance
+// @Description Get user's current collateral balance
+// @Tags collateral
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dto.APIResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /collateral/balance [get]
 func (h *CollateralHandler) GetCollateralBalance(c *fiber.Ctx) error {
 	// Extract the user address from the authentication middleware
 	address, ok := c.Locals("address").(string)
@@ -117,7 +151,17 @@ func (h *CollateralHandler) GetCollateralBalance(c *fiber.Ctx) error {
 	})
 }
 
-// GetCollateralInfo returns detailed collateral information for the user
+// GetCollateralInfo godoc
+// @Summary Get collateral information
+// @Description Get detailed information about user's collateral position
+// @Tags collateral
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dto.CollateralInfoResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /collateral/info [get]
 func (h *CollateralHandler) GetCollateralInfo(c *fiber.Ctx) error {
 	// Extract the user address from the authentication middleware
 	address, ok := c.Locals("address").(string)

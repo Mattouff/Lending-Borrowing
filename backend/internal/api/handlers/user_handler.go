@@ -1,3 +1,12 @@
+// @title Lending & Borrowing Platform API
+// @version 1.0
+// @description API for decentralized lending and borrowing platform
+// @host localhost:8080
+// @BasePath /api/v1
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+
 package handlers
 
 import (
@@ -25,7 +34,17 @@ func NewUserHandler(userService service.UserService, cfg *config.Config) *UserHa
 	}
 }
 
-// Register handles user registration
+// Register godoc
+// @Summary Register new user
+// @Description Register a new user with Ethereum address
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param request body dto.UserRegistrationRequest true "User registration details"
+// @Success 201 {object} dto.APIResponse{data=dto.UserResponse}
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /users/register [post]
 func (h *UserHandler) Register(c *fiber.Ctx) error {
 	var req dto.UserRegistrationRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -66,7 +85,18 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 	})
 }
 
-// Authenticate handles user authentication
+// Authenticate godoc
+// @Summary Authenticate with signature
+// @Description Authenticate user with Ethereum signature
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param request body dto.UserAuthRequest true "Authentication details"
+// @Success 200 {object} dto.AuthResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /users/auth [post]
 func (h *UserHandler) Authenticate(c *fiber.Ctx) error {
 	var req dto.UserAuthRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -126,7 +156,18 @@ func (h *UserHandler) Authenticate(c *fiber.Ctx) error {
 	})
 }
 
-// GetProfile retrieves the user's profile
+// GetProfile godoc
+// @Summary Get user profile
+// @Description Retrieves the profile of the authenticated user
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dto.APIResponse{data=dto.UserResponse}
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /users/profile [get]
 func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
 	// Get user ID from context (set by authentication middleware)
 	userID, ok := c.Locals("userID").(uint)
@@ -166,7 +207,20 @@ func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
 	})
 }
 
-// UpdateProfile updates the user's profile
+// UpdateProfile godoc
+// @Summary Update user profile
+// @Description Update the profile of the authenticated user
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.UserUpdateRequest true "User profile update details"
+// @Success 200 {object} dto.APIResponse{data=dto.UserResponse}
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /users/profile [put]
 func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 	// Get user ID from context (set by authentication middleware)
 	userID, ok := c.Locals("userID").(uint)
@@ -228,7 +282,21 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 	})
 }
 
-// GetUserByID retrieves a user by ID (admin only)
+// GetUserByID godoc
+// @Summary Get user by ID
+// @Description Retrieves a user by ID (admin only)
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "User ID"
+// @Success 200 {object} dto.APIResponse{data=dto.UserResponse}
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /users/admin/{id} [get]
 func (h *UserHandler) GetUserByID(c *fiber.Ctx) error {
 	// Get ID from URL
 	idStr := c.Params("id")
@@ -269,7 +337,21 @@ func (h *UserHandler) GetUserByID(c *fiber.Ctx) error {
 	})
 }
 
-// GetUserByAddress retrieves a user by Ethereum address (admin only)
+// GetUserByAddress godoc
+// @Summary Get user by address
+// @Description Retrieves a user by Ethereum address (admin only)
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param address path string true "Ethereum address"
+// @Success 200 {object} dto.APIResponse{data=dto.UserResponse}
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /users/admin/address/{address} [get]
 func (h *UserHandler) GetUserByAddress(c *fiber.Ctx) error {
 	// Get address from URL
 	address := c.Params("address")
@@ -309,7 +391,20 @@ func (h *UserHandler) GetUserByAddress(c *fiber.Ctx) error {
 	})
 }
 
-// ListUsers lists all users (admin only)
+// ListUsers godoc
+// @Summary List all users
+// @Description Lists all users with pagination (admin only)
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param page query int false "Page number (default: 1)"
+// @Param pageSize query int false "Page size (default: 10, max: 100)"
+// @Success 200 {object} dto.UserListResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /users/admin [get]
 func (h *UserHandler) ListUsers(c *fiber.Ctx) error {
 	// Get pagination parameters
 	page, _ := strconv.Atoi(c.Query("page", "1"))
@@ -371,7 +466,21 @@ func (h *UserHandler) ListUsers(c *fiber.Ctx) error {
 	})
 }
 
-// VerifyUser marks a user as verified (admin only)
+// VerifyUser godoc
+// @Summary Verify user
+// @Description Marks a user as verified (admin only)
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "User ID"
+// @Success 200 {object} dto.APIResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /users/admin/{id}/verify [put]
 func (h *UserHandler) VerifyUser(c *fiber.Ctx) error {
 	// Get ID from URL
 	idStr := c.Params("id")
@@ -404,7 +513,17 @@ func (h *UserHandler) VerifyUser(c *fiber.Ctx) error {
 	})
 }
 
-// NonceMessage generates a nonce message for a user to sign
+// NonceMessage godoc
+// @Summary Get nonce message
+// @Description Gets a nonce message for the user to sign for authentication
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param address path string true "Ethereum address"
+// @Success 200 {object} object{message=string,nonce=string}
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /users/nonce/{address} [get]
 func (h *UserHandler) NonceMessage(c *fiber.Ctx) error {
 	// Get address from URL
 	address := c.Params("address")

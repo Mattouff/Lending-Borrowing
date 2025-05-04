@@ -38,7 +38,15 @@ func NewMarketHandler(
 	}
 }
 
-// GetMarketOverview returns an overview of the market
+// GetMarketOverview godoc
+// @Summary Get market overview
+// @Description Get overview of the market including TVL, borrowed amounts, and rates
+// @Tags market
+// @Accept json
+// @Produce json
+// @Success 200 {object} dto.MarketOverviewResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /market/overview [get]
 func (h *MarketHandler) GetMarketOverview(c *fiber.Ctx) error {
 	// Get total deposited amount
 	totalDeposited, err := h.lendingService.GetTotalDeposited(c.Context())
@@ -114,7 +122,15 @@ func (h *MarketHandler) getActivePositionsCount(ctx context.Context) (int64, err
 	return h.positionRepository.Count(ctx, filter)
 }
 
-// GetTokensMarketData returns market data for all supported tokens
+// GetTokensMarketData godoc
+// @Summary Get tokens market data
+// @Description Get detailed market data for all supported tokens
+// @Tags market
+// @Accept json
+// @Produce json
+// @Success 200 {object} dto.TokensMarketResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /market/tokens [get]
 func (h *MarketHandler) GetTokensMarketData(c *fiber.Ctx) error {
 	// In a real implementation, you'd get token data from your services or a dedicated token service
 	// This is just a placeholder implementation

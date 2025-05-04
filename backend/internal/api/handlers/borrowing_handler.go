@@ -24,7 +24,19 @@ func NewBorrowingHandler(borrowingService service.BorrowingService) *BorrowingHa
 	}
 }
 
-// Borrow handles borrowing tokens against collateral
+// Borrow godoc
+// @Summary Borrow tokens against collateral
+// @Description Borrow tokens against deposited collateral
+// @Tags borrowing
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.TransactionRequest true "Borrow amount"
+// @Success 200 {object} dto.APIResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /borrowing/borrow [post]
 func (h *BorrowingHandler) Borrow(c *fiber.Ctx) error {
 	// Extract the user address from the authentication middleware
 	address, ok := c.Locals("address").(string)
@@ -60,7 +72,19 @@ func (h *BorrowingHandler) Borrow(c *fiber.Ctx) error {
 	})
 }
 
-// Repay handles repaying borrowed tokens
+// Repay godoc
+// @Summary Repay borrowed tokens
+// @Description Repay tokens previously borrowed from the protocol
+// @Tags borrowing
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.TransactionRequest true "Repay amount"
+// @Success 200 {object} dto.APIResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /borrowing/repay [post]
 func (h *BorrowingHandler) Repay(c *fiber.Ctx) error {
 	// Extract the user address from the authentication middleware
 	address, ok := c.Locals("address").(string)
@@ -96,7 +120,17 @@ func (h *BorrowingHandler) Repay(c *fiber.Ctx) error {
 	})
 }
 
-// GetBorrowedAmount returns the amount borrowed by the user
+// GetBorrowedAmount godoc
+// @Summary Get borrowed amount
+// @Description Get the total amount borrowed by the authenticated user
+// @Tags borrowing
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dto.APIResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /borrowing/balance [get]
 func (h *BorrowingHandler) GetBorrowedAmount(c *fiber.Ctx) error {
 	// Extract the user address from the authentication middleware
 	address, ok := c.Locals("address").(string)
@@ -119,7 +153,17 @@ func (h *BorrowingHandler) GetBorrowedAmount(c *fiber.Ctx) error {
 	})
 }
 
-// GetBorrowingInfo returns detailed borrowing information for the user
+// GetBorrowingInfo godoc
+// @Summary Get borrowing information
+// @Description Get detailed information about user's borrowing including interest accrued
+// @Tags borrowing
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dto.BorrowingInfoResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /borrowing/info [get]
 func (h *BorrowingHandler) GetBorrowingInfo(c *fiber.Ctx) error {
 	// Extract the user address from the authentication middleware
 	address, ok := c.Locals("address").(string)
@@ -153,7 +197,19 @@ func (h *BorrowingHandler) GetBorrowingInfo(c *fiber.Ctx) error {
 	})
 }
 
-// GetTransactionHistory returns the borrowing transaction history for a user
+// GetTransactionHistory godoc
+// @Summary Get borrowing transaction history
+// @Description Get paginated history of user's borrowing transactions
+// @Tags borrowing
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param page query int false "Page number (default: 1)"
+// @Param pageSize query int false "Page size (default: 10, max: 100)"
+// @Success 200 {object} dto.TransactionListResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /borrowing/transactions [get]
 func (h *BorrowingHandler) GetTransactionHistory(c *fiber.Ctx) error {
 	// Extract the user address from the authentication middleware
 	address, ok := c.Locals("address").(string)
@@ -230,7 +286,15 @@ func (h *BorrowingHandler) GetTransactionHistory(c *fiber.Ctx) error {
 	})
 }
 
-// GetBorrowingStats returns statistics about borrowing on the platform
+// GetBorrowingStats godoc
+// @Summary Get borrowing statistics
+// @Description Get global statistics about borrowing on the platform
+// @Tags borrowing
+// @Accept json
+// @Produce json
+// @Success 200 {object} dto.APIResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /borrowing/stats [get]
 func (h *BorrowingHandler) GetBorrowingStats(c *fiber.Ctx) error {
 	// Get the total borrowed amount
 	totalBorrowed, err := h.borrowingService.GetTotalBorrowed(c.Context())

@@ -24,7 +24,19 @@ func NewLendingHandler(lendingService service.LendingService) *LendingHandler {
 	}
 }
 
-// Deposit handles token deposits to the lending pool
+// Deposit godoc
+// @Summary Deposit tokens to lending pool
+// @Description Make a deposit into the lending pool to earn interest
+// @Tags lending
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.TransactionRequest true "Deposit amount"
+// @Success 200 {object} dto.APIResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /lending/deposit [post]
 func (h *LendingHandler) Deposit(c *fiber.Ctx) error {
 	// Extract the user address from the authentication middleware
 	address, ok := c.Locals("address").(string)
@@ -60,7 +72,19 @@ func (h *LendingHandler) Deposit(c *fiber.Ctx) error {
 	})
 }
 
-// Withdraw handles token withdrawals from the lending pool
+// Withdraw godoc
+// @Summary Withdraw tokens from lending pool
+// @Description Withdraw deposited tokens from the lending pool
+// @Tags lending
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.TransactionRequest true "Withdraw amount"
+// @Success 200 {object} dto.APIResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /lending/withdraw [post]
 func (h *LendingHandler) Withdraw(c *fiber.Ctx) error {
 	// Extract the user address from the authentication middleware
 	address, ok := c.Locals("address").(string)
@@ -96,7 +120,17 @@ func (h *LendingHandler) Withdraw(c *fiber.Ctx) error {
 	})
 }
 
-// GetLendingBalance returns the user's balance in the lending pool
+// GetLendingBalance godoc
+// @Summary Get lending balance
+// @Description Get user's current balance in the lending pool
+// @Tags lending
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dto.APIResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /lending/balance [get]
 func (h *LendingHandler) GetLendingBalance(c *fiber.Ctx) error {
 	// Extract the user address from the authentication middleware
 	address, ok := c.Locals("address").(string)
@@ -119,7 +153,17 @@ func (h *LendingHandler) GetLendingBalance(c *fiber.Ctx) error {
 	})
 }
 
-// GetLendingInfo returns detailed lending information for the user
+// GetLendingInfo godoc
+// @Summary Get lending information
+// @Description Get detailed lending information for the user including interest earned
+// @Tags lending
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dto.LendingInfoResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /lending/info [get]
 func (h *LendingHandler) GetLendingInfo(c *fiber.Ctx) error {
 	// Extract the user address from the authentication middleware
 	address, ok := c.Locals("address").(string)
@@ -153,7 +197,19 @@ func (h *LendingHandler) GetLendingInfo(c *fiber.Ctx) error {
 	})
 }
 
-// GetTransactionHistory returns the lending transaction history for a user
+// GetTransactionHistory godoc
+// @Summary Get lending transaction history
+// @Description Get paginated history of user's lending transactions
+// @Tags lending
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param page query int false "Page number (default: 1)"
+// @Param pageSize query int false "Page size (default: 10, max: 100)"
+// @Success 200 {object} dto.TransactionListResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /lending/transactions [get]
 func (h *LendingHandler) GetTransactionHistory(c *fiber.Ctx) error {
 	// Extract the user address from the authentication middleware
 	address, ok := c.Locals("address").(string)
@@ -230,7 +286,15 @@ func (h *LendingHandler) GetTransactionHistory(c *fiber.Ctx) error {
 	})
 }
 
-// GetPoolInfo returns information about the lending pool
+// GetPoolInfo godoc
+// @Summary Get lending pool information
+// @Description Get information about the lending pool including total deposited and interest rate
+// @Tags lending
+// @Accept json
+// @Produce json
+// @Success 200 {object} dto.APIResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /lending/pool-info [get]
 func (h *LendingHandler) GetPoolInfo(c *fiber.Ctx) error {
 	// Get the total deposited amount
 	totalDeposited, err := h.lendingService.GetTotalDeposited(c.Context())
