@@ -5,7 +5,8 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
-	_ "github.com/swaggo/fiber-swagger"
+	"github.com/gofiber/swagger"
+	_ "github.com/Mattouff/Lending-Borrowing/docs"
 
 	"github.com/Mattouff/Lending-Borrowing/internal/api/middleware"
 	"github.com/Mattouff/Lending-Borrowing/internal/api/routes"
@@ -134,6 +135,9 @@ func main() {
 
 	// Setup routes with both services and repositories
 	routes.SetupRoutes(app, services, repositories, cfg)
+
+	// Setup Swagger documentation route
+	app.Get("/swagger/*", swagger.HandlerDefault)
 
 	// Start server
 	serverAddr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
