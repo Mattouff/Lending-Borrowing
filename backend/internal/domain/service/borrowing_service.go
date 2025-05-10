@@ -32,5 +32,5 @@ type BorrowingService interface {
 	GetUserTransactionHistory(ctx context.Context, userAddress common.Address, offset, limit int) ([]*models.Transaction, error)
 
 	// CountUserTransactions counts the number of transactions for a user with optional filtering
-	CountUserTransactions(ctx context.Context, address common.Address, filter map[string]interface{}) (int64, error)
+	CountUserTransactions(ctx context.Context, address common.Address, filter map[string]any) (int64, error)
 }

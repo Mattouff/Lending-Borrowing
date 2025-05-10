@@ -259,7 +259,7 @@ func (s *borrowingService) GetUserTransactionHistory(ctx context.Context, userAd
 	}
 
 	// Get transactions with filter for borrow and repay types
-	filter := map[string]interface{}{
+	filter := map[string]any{
 		"user_id": user.ID,
 		"type":    []models.TransactionType{models.TransactionBorrow, models.TransactionRepay},
 	}

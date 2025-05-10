@@ -273,7 +273,7 @@ Response:
 Use the `cast` command-line tool from Foundry to sign the message with the corresponding private key:
 
 ```bash
-cast sign --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 "Sign this message to verify you are the owner of 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266. Nonce: 123456"
+cast wallet sign --private-key 0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6 "Sign this message to authenticate with our platform. Nonce: 0x14466e8e2b17e0d6ef871a5850f38c755ed243fc824f2c753fd52e71c417022f"
 ```
 
 This will output a signature string.

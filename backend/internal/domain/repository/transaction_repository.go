@@ -24,8 +24,8 @@ type TransactionRepository interface {
 	Update(ctx context.Context, transaction *models.Transaction) error
 
 	// List retrieves all transactions with optional filtering and pagination
-	List(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.Transaction, error)
+	List(ctx context.Context, filter map[string]any, offset, limit int) ([]*models.Transaction, error)
 
 	// Count returns the total number of transactions matching the filter
-	Count(ctx context.Context, filter map[string]interface{}) (int64, error)
+	Count(ctx context.Context, filter map[string]any) (int64, error)
 }

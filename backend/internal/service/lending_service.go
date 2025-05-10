@@ -161,7 +161,7 @@ func (s *lendingService) GetUserTransactionHistory(ctx context.Context, userAddr
 	}
 
 	// Get transactions with filter for deposit and withdraw types
-	filter := map[string]interface{}{
+	filter := map[string]any{
 		"user_id": user.ID,
 		"type":    []models.TransactionType{models.TransactionDeposit, models.TransactionWithdraw},
 	}

@@ -41,7 +41,7 @@ func Authentication(cfg *config.Config) fiber.Handler {
 
 		// Parse and validate the token
 		claims := &AuthClaims{}
-		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (any, error) {
 			// Validate the signing algorithm
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, errors.New("unexpected signing method")

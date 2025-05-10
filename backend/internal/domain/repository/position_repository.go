@@ -30,8 +30,8 @@ type PositionRepository interface {
 	FindAtRisk(ctx context.Context, healthFactorThreshold string) ([]*models.Position, error)
 
 	// List retrieves all positions with optional filtering and pagination
-	List(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.Position, error)
+	List(ctx context.Context, filter map[string]any, offset, limit int) ([]*models.Position, error)
 
 	// Count returns the total number of positions matching the filter
-	Count(ctx context.Context, filter map[string]interface{}) (int64, error)
+	Count(ctx context.Context, filter map[string]any) (int64, error)
 }

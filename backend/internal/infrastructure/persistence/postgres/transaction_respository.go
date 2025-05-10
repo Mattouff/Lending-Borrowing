@@ -78,7 +78,7 @@ func (r *transactionRepository) Update(ctx context.Context, transaction *models.
 }
 
 // List retrieves all transactions with optional filtering and pagination
-func (r *transactionRepository) List(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.Transaction, error) {
+func (r *transactionRepository) List(ctx context.Context, filter map[string]any, offset, limit int) ([]*models.Transaction, error) {
 	var transactions []*models.Transaction
 	query := r.db.WithContext(ctx).Model(&models.Transaction{})
 
@@ -112,7 +112,7 @@ func (r *transactionRepository) List(ctx context.Context, filter map[string]inte
 }
 
 // Count returns the total number of transactions matching the filter
-func (r *transactionRepository) Count(ctx context.Context, filter map[string]interface{}) (int64, error) {
+func (r *transactionRepository) Count(ctx context.Context, filter map[string]any) (int64, error) {
 	var count int64
 	query := r.db.WithContext(ctx).Model(&models.Transaction{})
 

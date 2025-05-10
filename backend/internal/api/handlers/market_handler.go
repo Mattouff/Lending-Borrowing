@@ -102,7 +102,7 @@ func (h *MarketHandler) getActiveUsersCount(ctx context.Context) (int64, error) 
 	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
 
 	// Using a filter to count users who have logged in recently
-	filter := map[string]interface{}{
+	filter := map[string]any{
 		"last_login_after": thirtyDaysAgo,
 	}
 
@@ -114,7 +114,7 @@ func (h *MarketHandler) getActiveUsersCount(ctx context.Context) (int64, error) 
 // getActivePositionsCount returns the count of active positions
 func (h *MarketHandler) getActivePositionsCount(ctx context.Context) (int64, error) {
 	// Using a filter to count positions with status "active"
-	filter := map[string]interface{}{
+	filter := map[string]any{
 		"status": models.StatusActive,
 	}
 

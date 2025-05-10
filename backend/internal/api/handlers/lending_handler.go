@@ -264,7 +264,7 @@ func (h *LendingHandler) GetTransactionHistory(c *fiber.Ctx) error {
 
 	// Get total count for pagination
 	ethAddress := common.HexToAddress(address)
-	filter := map[string]interface{}{
+	filter := map[string]any{
 		"type": []models.TransactionType{models.TransactionDeposit, models.TransactionWithdraw},
 	}
 

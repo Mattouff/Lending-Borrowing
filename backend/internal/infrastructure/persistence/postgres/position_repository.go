@@ -82,7 +82,7 @@ func (r *positionRepository) FindAtRisk(ctx context.Context, healthFactorThresho
 }
 
 // List retrieves all positions with optional filtering and pagination
-func (r *positionRepository) List(ctx context.Context, filter map[string]interface{}, offset, limit int) ([]*models.Position, error) {
+func (r *positionRepository) List(ctx context.Context, filter map[string]any, offset, limit int) ([]*models.Position, error) {
 	var positions []*models.Position
 	query := r.db.WithContext(ctx).Model(&models.Position{})
 
@@ -107,7 +107,7 @@ func (r *positionRepository) List(ctx context.Context, filter map[string]interfa
 }
 
 // Count returns the total number of positions matching the filter
-func (r *positionRepository) Count(ctx context.Context, filter map[string]interface{}) (int64, error) {
+func (r *positionRepository) Count(ctx context.Context, filter map[string]any) (int64, error) {
 	var count int64
 	query := r.db.WithContext(ctx).Model(&models.Position{})
 
