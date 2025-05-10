@@ -31,7 +31,7 @@ func NewUserService(userRepo repository.UserRepository, cfg *config.Config) serv
 }
 
 // Register creates a new user
-func (s *userService) Register(ctx context.Context, address, username, email string) (*models.User, error) {
+func (s *userService) Register(ctx context.Context, address, username string) (*models.User, error) {
 	// Validate the Ethereum address
 	if !common.IsHexAddress(address) {
 		return nil, errors.New("invalid ethereum address")
@@ -49,7 +49,6 @@ func (s *userService) Register(ctx context.Context, address, username, email str
 	user := &models.User{
 		Address:   address,
 		Username:  username,
-		Email:     email,
 		Role:      models.RoleUser,
 		Verified:  false,
 		Nonce:     nonce,

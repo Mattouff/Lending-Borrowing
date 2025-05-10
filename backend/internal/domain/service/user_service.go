@@ -9,7 +9,7 @@ import (
 // UserService defines the interface for user business logic
 type UserService interface {
 	// Register creates a new user
-	Register(ctx context.Context, address, username, email string) (*models.User, error)
+	Register(ctx context.Context, address, username string) (*models.User, error)
 
 	// GetByID retrieves a user by ID
 	GetByID(ctx context.Context, id uint) (*models.User, error)

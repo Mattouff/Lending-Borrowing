@@ -39,7 +39,6 @@ func SeedDB(db *gorm.DB) error {
 		admin := models.User{
 			Address:  "0x1234567890123456789012345678901234567890", // Should be replaced with actual admin address
 			Username: "admin",
-			Email:    "admin@example.com",
 			Role:     models.RoleAdmin,
 			Verified: true,
 		}

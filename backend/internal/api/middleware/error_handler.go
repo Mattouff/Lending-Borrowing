@@ -74,8 +74,6 @@ func getValidationErrorMessage(e validator.FieldError) string {
 		return "Value does not satisfy minimum length"
 	case "max":
 		return "Value exceeds maximum length"
-	case "email":
-		return "Invalid email format"
 	case "eth_addr":
 		return "Invalid Ethereum address"
 	default:

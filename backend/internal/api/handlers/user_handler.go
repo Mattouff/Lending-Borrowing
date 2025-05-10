@@ -52,12 +52,12 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 	}
 
 	// Validate the request
-	if req.Address == "" || req.Username == "" || req.Email == "" {
-		return fiber.NewError(fiber.StatusBadRequest, "Address, username, and email are required")
+	if req.Address == "" || req.Username == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "Address and username are required")
 	}
 
 	// Create the user
-	user, err := h.userService.Register(c.Context(), req.Address, req.Username, req.Email)
+	user, err := h.userService.Register(c.Context(), req.Address, req.Username)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Failed to register user: "+err.Error())
 	}
@@ -67,7 +67,6 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 		ID:        user.ID,
 		Address:   user.Address,
 		Username:  user.Username,
-		Email:     user.Email,
 		Role:      dto.UserRole(user.Role),
 		Verified:  user.Verified,
 		CreatedAt: user.CreatedAt,
@@ -139,7 +138,6 @@ func (h *UserHandler) Authenticate(c *fiber.Ctx) error {
 		ID:        user.ID,
 		Address:   user.Address,
 		Username:  user.Username,
-		Email:     user.Email,
 		Role:      dto.UserRole(user.Role),
 		Verified:  user.Verified,
 		CreatedAt: user.CreatedAt,
@@ -190,7 +188,6 @@ func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
 		ID:        user.ID,
 		Address:   user.Address,
 		Username:  user.Username,
-		Email:     user.Email,
 		Role:      dto.UserRole(user.Role),
 		Verified:  user.Verified,
 		CreatedAt: user.CreatedAt,
@@ -248,10 +245,6 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 		user.Username = req.Username
 	}
 
-	if req.Email != "" {
-		user.Email = req.Email
-	}
-
 	user.UpdatedAt = time.Now()
 
 	// Save the updated user
@@ -264,7 +257,6 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 		ID:        user.ID,
 		Address:   user.Address,
 		Username:  user.Username,
-		Email:     user.Email,
 		Role:      dto.UserRole(user.Role),
 		Verified:  user.Verified,
 		CreatedAt: user.CreatedAt,
@@ -320,7 +312,6 @@ func (h *UserHandler) GetUserByID(c *fiber.Ctx) error {
 		ID:        user.ID,
 		Address:   user.Address,
 		Username:  user.Username,
-		Email:     user.Email,
 		Role:      dto.UserRole(user.Role),
 		Verified:  user.Verified,
 		CreatedAt: user.CreatedAt,
@@ -374,7 +365,6 @@ func (h *UserHandler) GetUserByAddress(c *fiber.Ctx) error {
 		ID:        user.ID,
 		Address:   user.Address,
 		Username:  user.Username,
-		Email:     user.Email,
 		Role:      dto.UserRole(user.Role),
 		Verified:  user.Verified,
 		CreatedAt: user.CreatedAt,
@@ -434,7 +424,6 @@ func (h *UserHandler) ListUsers(c *fiber.Ctx) error {
 			ID:        user.ID,
 			Address:   user.Address,
 			Username:  user.Username,
-			Email:     user.Email,
 			Role:      dto.UserRole(user.Role),
 			Verified:  user.Verified,
 			CreatedAt: user.CreatedAt,

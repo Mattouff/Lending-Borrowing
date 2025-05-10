@@ -18,8 +18,8 @@ type Network string
 const (
 	// Ethereum mainnet
 	Mainnet Network = "mainnet"
-	// Ethereum testnet (Goerli)
-	Goerli Network = "goerli"
+	// Ethereum testnet (Hoodi)
+	Hoodi Network = "hoodi"
 	// Ethereum testnet (Sepolia)
 	Sepolia Network = "sepolia"
 	// Local development network
@@ -89,10 +89,10 @@ func (ec *EthClient) Initialize(rpcURL string, networkName Network, contracts ma
 		if !isMainnetChainID(chainID) {
 			return fmt.Errorf("connected to wrong network: expected mainnet, got chain ID %s", chainID.String())
 		}
-	case Goerli:
-		blockExplorer = "https://goerli.etherscan.io"
-		if chainID.Cmp(big.NewInt(5)) != 0 {
-			return fmt.Errorf("connected to wrong network: expected Goerli (chain ID 5), got %s", chainID.String())
+	case Hoodi:
+		blockExplorer = "https://hoodi.etherscan.io/"
+		if chainID.Cmp(big.NewInt(560048)) != 0 {
+			return fmt.Errorf("connected to wrong network: expected Hoodi (chain ID 560048), got %s", chainID.String())
 		}
 	case Sepolia:
 		blockExplorer = "https://sepolia.etherscan.io"
