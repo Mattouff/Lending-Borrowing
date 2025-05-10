@@ -146,7 +146,7 @@ func bindCollateral(address common.Address, caller bind.ContractCaller, transact
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_Collateral *CollateralRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
+func (_Collateral *CollateralRaw) Call(opts *bind.CallOpts, result *[]any, method string, params ...any) error {
 	return _Collateral.Contract.CollateralCaller.contract.Call(opts, result, method, params...)
 }
 
@@ -157,7 +157,7 @@ func (_Collateral *CollateralRaw) Transfer(opts *bind.TransactOpts) (*types.Tran
 }
 
 // Transact invokes the (paid) contract method with params as input values.
-func (_Collateral *CollateralRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+func (_Collateral *CollateralRaw) Transact(opts *bind.TransactOpts, method string, params ...any) (*types.Transaction, error) {
 	return _Collateral.Contract.CollateralTransactor.contract.Transact(opts, method, params...)
 }
 
@@ -165,7 +165,7 @@ func (_Collateral *CollateralRaw) Transact(opts *bind.TransactOpts, method strin
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_Collateral *CollateralCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
+func (_Collateral *CollateralCallerRaw) Call(opts *bind.CallOpts, result *[]any, method string, params ...any) error {
 	return _Collateral.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -176,7 +176,7 @@ func (_Collateral *CollateralTransactorRaw) Transfer(opts *bind.TransactOpts) (*
 }
 
 // Transact invokes the (paid) contract method with params as input values.
-func (_Collateral *CollateralTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+func (_Collateral *CollateralTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...any) (*types.Transaction, error) {
 	return _Collateral.Contract.contract.Transact(opts, method, params...)
 }
 
@@ -184,7 +184,7 @@ func (_Collateral *CollateralTransactorRaw) Transact(opts *bind.TransactOpts, me
 //
 // Solidity: function LIQUIDATION_BONUS() view returns(uint256)
 func (_Collateral *CollateralCaller) LIQUIDATIONBONUS(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _Collateral.contract.Call(opts, &out, "LIQUIDATION_BONUS")
 
 	if err != nil {
@@ -215,7 +215,7 @@ func (_Collateral *CollateralCallerSession) LIQUIDATIONBONUS() (*big.Int, error)
 //
 // Solidity: function LIQUIDATION_THRESHOLD() view returns(uint256)
 func (_Collateral *CollateralCaller) LIQUIDATIONTHRESHOLD(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _Collateral.contract.Call(opts, &out, "LIQUIDATION_THRESHOLD")
 
 	if err != nil {
@@ -246,7 +246,7 @@ func (_Collateral *CollateralCallerSession) LIQUIDATIONTHRESHOLD() (*big.Int, er
 //
 // Solidity: function MAX_BORROWING_PERCENTAGE() view returns(uint256)
 func (_Collateral *CollateralCaller) MAXBORROWINGPERCENTAGE(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _Collateral.contract.Call(opts, &out, "MAX_BORROWING_PERCENTAGE")
 
 	if err != nil {
@@ -277,7 +277,7 @@ func (_Collateral *CollateralCallerSession) MAXBORROWINGPERCENTAGE() (*big.Int, 
 //
 // Solidity: function MIN_COLLATERAL_RATIO() view returns(uint256)
 func (_Collateral *CollateralCaller) MINCOLLATERALRATIO(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _Collateral.contract.Call(opts, &out, "MIN_COLLATERAL_RATIO")
 
 	if err != nil {
@@ -308,7 +308,7 @@ func (_Collateral *CollateralCallerSession) MINCOLLATERALRATIO() (*big.Int, erro
 //
 // Solidity: function borrowing() view returns(address)
 func (_Collateral *CollateralCaller) Borrowing(opts *bind.CallOpts) (common.Address, error) {
-	var out []interface{}
+	var out []any
 	err := _Collateral.contract.Call(opts, &out, "borrowing")
 
 	if err != nil {
@@ -339,7 +339,7 @@ func (_Collateral *CollateralCallerSession) Borrowing() (common.Address, error) 
 //
 // Solidity: function canBorrow(address user, uint256 borrowAmount) view returns(bool)
 func (_Collateral *CollateralCaller) CanBorrow(opts *bind.CallOpts, user common.Address, borrowAmount *big.Int) (bool, error) {
-	var out []interface{}
+	var out []any
 	err := _Collateral.contract.Call(opts, &out, "canBorrow", user, borrowAmount)
 
 	if err != nil {
@@ -370,7 +370,7 @@ func (_Collateral *CollateralCallerSession) CanBorrow(user common.Address, borro
 //
 // Solidity: function collateralBalance(address ) view returns(uint256)
 func (_Collateral *CollateralCaller) CollateralBalance(opts *bind.CallOpts, arg0 common.Address) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _Collateral.contract.Call(opts, &out, "collateralBalance", arg0)
 
 	if err != nil {
@@ -401,7 +401,7 @@ func (_Collateral *CollateralCallerSession) CollateralBalance(arg0 common.Addres
 //
 // Solidity: function getCollateralRatio(address user) view returns(uint256)
 func (_Collateral *CollateralCaller) GetCollateralRatio(opts *bind.CallOpts, user common.Address) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _Collateral.contract.Call(opts, &out, "getCollateralRatio", user)
 
 	if err != nil {
@@ -432,7 +432,7 @@ func (_Collateral *CollateralCallerSession) GetCollateralRatio(user common.Addre
 //
 // Solidity: function getMaxBorrowableAmount(address user) view returns(uint256)
 func (_Collateral *CollateralCaller) GetMaxBorrowableAmount(opts *bind.CallOpts, user common.Address) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _Collateral.contract.Call(opts, &out, "getMaxBorrowableAmount", user)
 
 	if err != nil {
@@ -463,7 +463,7 @@ func (_Collateral *CollateralCallerSession) GetMaxBorrowableAmount(user common.A
 //
 // Solidity: function token() view returns(address)
 func (_Collateral *CollateralCaller) Token(opts *bind.CallOpts) (common.Address, error) {
-	var out []interface{}
+	var out []any
 	err := _Collateral.contract.Call(opts, &out, "token")
 
 	if err != nil {

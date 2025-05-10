@@ -2,7 +2,7 @@ package database
 
 import (
 	"fmt"
-	"os"
+	"log"
 	"time"
 
 	"gorm.io/driver/postgres"
@@ -10,19 +10,14 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func Connect() (*gorm.DB, error) {
+// Connect establishes a connection to the database using the provided DSN
+func Connect(dsn string) (*gorm.DB, error) {
 	var db *gorm.DB
 	var err error
 
-	dsn := os.Getenv("POSTGRES_URL")
-
+	logMode := logger.Info
 	if dsn == "" {
-		dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=5432 sslmode=require prefer_simple_protocol=true",
-			os.Getenv("POSTGRES_HOST"),
-			os.Getenv("POSTGRES_USER"),
-			os.Getenv("POSTGRES_PASSWORD"),
-			os.Getenv("POSTGRES_DATABASE"),
-		)
+		return nil, fmt.Errorf("database connection string (DSN) is empty")
 	}
 
 	maxRetries := 5
@@ -31,14 +26,14 @@ func Connect() (*gorm.DB, error) {
 	for i := range maxRetries {
 		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
 			PrepareStmt: false,
-			Logger: logger.Default.LogMode(logger.Info),
+			Logger:      logger.Default.LogMode(logMode),
 		})
 
 		if err == nil {
 			break
 		}
 
-		fmt.Printf("Failed to connect to database (attempt %d/%d): %v\n", i+1, maxRetries, err)
+		log.Printf("Failed to connect to database (attempt %d/%d): %v\n", i+1, maxRetries, err)
 		if i < maxRetries-1 {
 			time.Sleep(retryInterval)
 		}
@@ -60,12 +55,6 @@ func Connect() (*gorm.DB, error) {
 	// SetConnMaxLifetime sets the maximum amount of time a connection may be reused
 	sqlDB.SetConnMaxLifetime(time.Hour)
 
-	fmt.Println("Connected to database")
+	log.Println("Connected to database successfully")
 	return db, nil
 }
-
-// func MigrateDB(db *gorm.DB) error {
-//     return db.AutoMigrate(&models.User{})
-// }
-
-

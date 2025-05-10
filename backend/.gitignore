@@ -7,6 +7,7 @@
 *.dll
 *.so
 *.dylib
+Lending-Borrowing
 
 # Test binary, built with `go test -c`
 *.test
@@ -23,3 +24,9 @@ go.work.sum
 
 # env file
 .env
+.env.dev
+.env.prod
+
+/tmp
+
+/docs

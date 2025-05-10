@@ -146,7 +146,7 @@ func bindBorrowing(address common.Address, caller bind.ContractCaller, transacto
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_Borrowing *BorrowingRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
+func (_Borrowing *BorrowingRaw) Call(opts *bind.CallOpts, result *[]any, method string, params ...any) error {
 	return _Borrowing.Contract.BorrowingCaller.contract.Call(opts, result, method, params...)
 }
 
@@ -157,7 +157,7 @@ func (_Borrowing *BorrowingRaw) Transfer(opts *bind.TransactOpts) (*types.Transa
 }
 
 // Transact invokes the (paid) contract method with params as input values.
-func (_Borrowing *BorrowingRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+func (_Borrowing *BorrowingRaw) Transact(opts *bind.TransactOpts, method string, params ...any) (*types.Transaction, error) {
 	return _Borrowing.Contract.BorrowingTransactor.contract.Transact(opts, method, params...)
 }
 
@@ -165,7 +165,7 @@ func (_Borrowing *BorrowingRaw) Transact(opts *bind.TransactOpts, method string,
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_Borrowing *BorrowingCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
+func (_Borrowing *BorrowingCallerRaw) Call(opts *bind.CallOpts, result *[]any, method string, params ...any) error {
 	return _Borrowing.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -176,7 +176,7 @@ func (_Borrowing *BorrowingTransactorRaw) Transfer(opts *bind.TransactOpts) (*ty
 }
 
 // Transact invokes the (paid) contract method with params as input values.
-func (_Borrowing *BorrowingTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+func (_Borrowing *BorrowingTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...any) (*types.Transaction, error) {
 	return _Borrowing.Contract.contract.Transact(opts, method, params...)
 }
 
@@ -184,7 +184,7 @@ func (_Borrowing *BorrowingTransactorRaw) Transact(opts *bind.TransactOpts, meth
 //
 // Solidity: function beta() view returns(uint256)
 func (_Borrowing *BorrowingCaller) Beta(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _Borrowing.contract.Call(opts, &out, "beta")
 
 	if err != nil {
@@ -215,7 +215,7 @@ func (_Borrowing *BorrowingCallerSession) Beta() (*big.Int, error) {
 //
 // Solidity: function borrowedPrincipal(address ) view returns(uint256)
 func (_Borrowing *BorrowingCaller) BorrowedPrincipal(opts *bind.CallOpts, arg0 common.Address) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _Borrowing.contract.Call(opts, &out, "borrowedPrincipal", arg0)
 
 	if err != nil {
@@ -246,7 +246,7 @@ func (_Borrowing *BorrowingCallerSession) BorrowedPrincipal(arg0 common.Address)
 //
 // Solidity: function collateral() view returns(address)
 func (_Borrowing *BorrowingCaller) Collateral(opts *bind.CallOpts) (common.Address, error) {
-	var out []interface{}
+	var out []any
 	err := _Borrowing.contract.Call(opts, &out, "collateral")
 
 	if err != nil {
@@ -277,7 +277,7 @@ func (_Borrowing *BorrowingCallerSession) Collateral() (common.Address, error) {
 //
 // Solidity: function getAllBorrowToken() view returns(uint256)
 func (_Borrowing *BorrowingCaller) GetAllBorrowToken(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _Borrowing.contract.Call(opts, &out, "getAllBorrowToken")
 
 	if err != nil {
@@ -308,7 +308,7 @@ func (_Borrowing *BorrowingCallerSession) GetAllBorrowToken() (*big.Int, error) 
 //
 // Solidity: function getBorrowToken(address user) view returns(uint256)
 func (_Borrowing *BorrowingCaller) GetBorrowToken(opts *bind.CallOpts, user common.Address) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _Borrowing.contract.Call(opts, &out, "getBorrowToken", user)
 
 	if err != nil {
@@ -339,7 +339,7 @@ func (_Borrowing *BorrowingCallerSession) GetBorrowToken(user common.Address) (*
 //
 // Solidity: function getCurrentRate() view returns(uint256)
 func (_Borrowing *BorrowingCaller) GetCurrentRate(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _Borrowing.contract.Call(opts, &out, "getCurrentRate")
 
 	if err != nil {
@@ -370,7 +370,7 @@ func (_Borrowing *BorrowingCallerSession) GetCurrentRate() (*big.Int, error) {
 //
 // Solidity: function lastUpdateTime(address ) view returns(uint256)
 func (_Borrowing *BorrowingCaller) LastUpdateTime(opts *bind.CallOpts, arg0 common.Address) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _Borrowing.contract.Call(opts, &out, "lastUpdateTime", arg0)
 
 	if err != nil {
@@ -401,7 +401,7 @@ func (_Borrowing *BorrowingCallerSession) LastUpdateTime(arg0 common.Address) (*
 //
 // Solidity: function rMax() view returns(uint256)
 func (_Borrowing *BorrowingCaller) RMax(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _Borrowing.contract.Call(opts, &out, "rMax")
 
 	if err != nil {
@@ -432,7 +432,7 @@ func (_Borrowing *BorrowingCallerSession) RMax() (*big.Int, error) {
 //
 // Solidity: function rMin() view returns(uint256)
 func (_Borrowing *BorrowingCaller) RMin(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _Borrowing.contract.Call(opts, &out, "rMin")
 
 	if err != nil {
@@ -463,7 +463,7 @@ func (_Borrowing *BorrowingCallerSession) RMin() (*big.Int, error) {
 //
 // Solidity: function token() view returns(address)
 func (_Borrowing *BorrowingCaller) Token(opts *bind.CallOpts) (common.Address, error) {
-	var out []interface{}
+	var out []any
 	err := _Borrowing.contract.Call(opts, &out, "token")
 
 	if err != nil {
@@ -494,7 +494,7 @@ func (_Borrowing *BorrowingCallerSession) Token() (common.Address, error) {
 //
 // Solidity: function totalBorrowed() view returns(uint256)
 func (_Borrowing *BorrowingCaller) TotalBorrowed(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _Borrowing.contract.Call(opts, &out, "totalBorrowed")
 
 	if err != nil {
