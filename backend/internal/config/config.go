@@ -73,7 +73,7 @@ func LoadConfig() (*Config, error) {
 		Host:     GetEnv("DB_HOST", "localhost"),
 		Port:     GetEnvInt("DB_PORT", 5432),
 		User:     GetEnv("DB_USER", "postgres"),
-		Password: GetEnv("DB_PASSWORD", ""),
+		Password: GetRequiredEnv("DB_PASSWORD"),
 		DBName:   GetEnv("DB_NAME", "lending_borrowing"),
 		SSLMode:  GetEnv("DB_SSLMODE", "disable"),
 		TimeZone: GetEnv("DB_TIMEZONE", "UTC"),
@@ -87,8 +87,8 @@ func LoadConfig() (*Config, error) {
 	contractAddresses := make(map[string]common.Address)
 
 	if contractAddressesStr != "" {
-		pairs := strings.Split(contractAddressesStr, ",")
-		for _, pair := range pairs {
+		pairs := strings.SplitSeq(contractAddressesStr, ",")
+		for pair := range pairs {
 			keyVal := strings.Split(pair, "=")
 			if len(keyVal) == 2 {
 				name := keyVal[0]
@@ -113,7 +113,7 @@ func LoadConfig() (*Config, error) {
 
 	// Load JWT configuration
 	jwtConfig := JWTConfig{
-		Secret:     GetEnv("JWT_SECRET", "your-256-bit-secret"),
+		Secret:     GetRequiredEnv("JWT_SECRET"),
 		ExpireTime: GetEnvInt("JWT_EXPIRE", 24),
 	}
 
@@ -123,13 +123,42 @@ func LoadConfig() (*Config, error) {
 		Port: GetEnvInt("SERVER_PORT", 8080),
 	}
 
-	return &Config{
+	config := &Config{
 		App:        appConfig,
 		Database:   dbConfig,
 		Blockchain: blockchainConfig,
 		JWT:        jwtConfig,
 		Server:     serverConfig,
-	}, nil
+	}
+
+	// Validate configuration
+    if err := config.Validate(); err != nil {
+        return nil, err
+    }
+    
+    return config, nil
+}
+
+func (c *Config) Validate() error {
+	// In production, ensure all security-critical settings are set
+	if c.App.Environment == "production" {
+		// Check JWT secret
+		if c.JWT.Secret == "" || c.JWT.Secret == "your-256-bit-secret" {
+			return fmt.Errorf("production environment requires a secure JWT_SECRET")
+		}
+
+		// Check DB password
+		if c.Database.Password == "" {
+			return fmt.Errorf("production environment requires DB_PASSWORD to be set")
+		}
+
+		// Check HTTPS is used for external-facing services
+		if !strings.HasPrefix(c.Server.Host, "localhost") && c.Server.Port == 80 {
+			return fmt.Errorf("production environment should use HTTPS (port 443)")
+		}
+	}
+
+	return nil
 }
 
 // GetDatabaseDSN returns the database connection string

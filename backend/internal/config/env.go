@@ -71,3 +71,12 @@ func GetEnvArray(key string, defaultValue []string) []string {
 
 	return strings.Split(value, ",")
 }
+
+// GetRequiredEnv returns the value of the environment variable or panics if not set
+func GetRequiredEnv(key string) string {
+    value, exists := os.LookupEnv(key)
+    if !exists || value == "" {
+        panic(fmt.Sprintf("Required environment variable %s is not set", key))
+    }
+    return value
+}
