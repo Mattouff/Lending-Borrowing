@@ -27,6 +27,7 @@ func SetupUserRoutes(router fiber.Router, userService service.UserService, cfg *
 	userRouter.Use(middleware.Authentication(cfg))
 	userRouter.Get("/profile", userHandler.GetProfile)
 	userRouter.Put("/profile", userHandler.UpdateProfile)
+	userRouter.Delete("/account", userHandler.DeleteAccount)
 
 	// Admin only routes
 	adminRouter := userRouter.Group("/admin")
@@ -35,4 +36,5 @@ func SetupUserRoutes(router fiber.Router, userService service.UserService, cfg *
 	adminRouter.Get("/:id", userHandler.GetUserByID)
 	adminRouter.Get("/address/:address", userHandler.GetUserByAddress)
 	adminRouter.Put("/:id/verify", userHandler.VerifyUser)
+	adminRouter.Delete("/:id", userHandler.DeleteUser)
 }

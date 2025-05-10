@@ -153,3 +153,13 @@ func (s *userService) GenerateNonce(address string) string {
 func (s *userService) Count(ctx context.Context) (int64, error) {
 	return s.userRepo.Count(ctx)
 }
+
+// CountWithFilter counts users that match the given filter criteria
+func (s *userService) CountWithFilter(ctx context.Context, filter map[string]any) (int64, error) {
+	return s.userRepo.CountWithFilter(ctx, filter)
+}
+
+// Delete marks a user as deleted (soft delete)
+func (s *userService) Delete(ctx context.Context, id uint) error {
+	return s.userRepo.Delete(ctx, id)
+}

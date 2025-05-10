@@ -20,6 +20,9 @@ type UserService interface {
 	// Update updates an existing user
 	Update(ctx context.Context, user *models.User) error
 
+	// Delete marks a user as deleted (soft delete)
+	Delete(ctx context.Context, id uint) error
+
 	// VerifySignature verifies that a signature was created by the user's address
 	VerifySignature(ctx context.Context, address, message, signature string) (bool, error)
 
@@ -34,4 +37,7 @@ type UserService interface {
 
 	// Count returns the total number of users
 	Count(ctx context.Context) (int64, error)
+
+	// CountWithFilter counts users that match the given filter criteria
+	CountWithFilter(ctx context.Context, filter map[string]any) (int64, error)
 }

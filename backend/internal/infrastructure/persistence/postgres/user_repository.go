@@ -90,8 +90,6 @@ func (r *userRepository) Count(ctx context.Context) (int64, error) {
 	return count, err
 }
 
-// Add this method to your userRepository implementation:
-
 // CountWithFilter counts users that match the given filter criteria
 func (r *userRepository) CountWithFilter(ctx context.Context, filter map[string]any) (int64, error) {
 	var count int64

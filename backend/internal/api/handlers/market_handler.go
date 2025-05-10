@@ -98,7 +98,6 @@ func (h *MarketHandler) GetMarketOverview(c *fiber.Ctx) error {
 // getActiveUsersCount returns the count of users who have logged in within the last 30 days
 func (h *MarketHandler) getActiveUsersCount(ctx context.Context) (int64, error) {
 	// In a real implementation, you'd query the database for users with last_login within the last 30 days
-	// This can be customized based on your definition of "active"
 	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
 
 	// Using a filter to count users who have logged in recently
@@ -106,8 +105,6 @@ func (h *MarketHandler) getActiveUsersCount(ctx context.Context) (int64, error) 
 		"last_login_after": thirtyDaysAgo,
 	}
 
-	// This assumes your repository has a CountWithFilter method
-	// If not, you'd need to add this method or use a custom query
 	return h.userRepository.CountWithFilter(ctx, filter)
 }
 

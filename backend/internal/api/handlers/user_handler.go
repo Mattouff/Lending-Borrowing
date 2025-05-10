@@ -550,3 +550,86 @@ func (h *UserHandler) NonceMessage(c *fiber.Ctx) error {
 		"nonce":   nonce,
 	})
 }
+
+// DeleteAccount godoc
+// @Summary Delete user account
+// @Description Mark a user account as deleted (soft delete)
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dto.APIResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /users/account [delete]
+func (h *UserHandler) DeleteAccount(c *fiber.Ctx) error {
+    // Get user ID from context (set by authentication middleware)
+    userID, ok := c.Locals("userID").(uint)
+    if !ok {
+        return fiber.NewError(fiber.StatusUnauthorized, "User not authenticated")
+    }
+
+    // Get the user
+    user, err := h.userService.GetByID(c.Context(), userID)
+    if err != nil {
+        return fiber.NewError(fiber.StatusInternalServerError, "Failed to get user: "+err.Error())
+    }
+
+    if user == nil {
+        return fiber.NewError(fiber.StatusNotFound, "User not found")
+    }
+
+    // Delete the user (soft delete)
+    if err := h.userService.Delete(c.Context(), userID); err != nil {
+        return fiber.NewError(fiber.StatusInternalServerError, "Failed to delete account: "+err.Error())
+    }
+
+    return c.Status(fiber.StatusOK).JSON(dto.APIResponse{
+        Success: true,
+        Message: "Account deleted successfully",
+    })
+}
+
+// DeleteUser godoc
+// @Summary Delete any user
+// @Description Mark any user account as deleted (soft delete) - (Admin only)
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "User ID"
+// @Success 200 {object} dto.APIResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /users/admin/{id} [delete]
+func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
+    // Parse user ID from URL
+    id, err := strconv.ParseUint(c.Params("id"), 10, 32)
+    if err != nil {
+        return fiber.NewError(fiber.StatusBadRequest, "Invalid user ID")
+    }
+
+    // Check if user exists
+    user, err := h.userService.GetByID(c.Context(), uint(id))
+    if err != nil {
+        return fiber.NewError(fiber.StatusInternalServerError, "Failed to get user: "+err.Error())
+    }
+
+    if user == nil {
+        return fiber.NewError(fiber.StatusNotFound, "User not found")
+    }
+
+    // Delete the user (soft delete)
+    if err := h.userService.Delete(c.Context(), uint(id)); err != nil {
+        return fiber.NewError(fiber.StatusInternalServerError, "Failed to delete user: "+err.Error())
+    }
+
+    return c.Status(fiber.StatusOK).JSON(dto.APIResponse{
+        Success: true,
+        Message: "User deleted successfully",
+    })
+}
