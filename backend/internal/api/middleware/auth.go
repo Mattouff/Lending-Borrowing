@@ -1,15 +1,16 @@
 package middleware
 
 import (
-	"errors"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
 
+	"slices"
+
 	"github.com/Mattouff/Lending-Borrowing/internal/config"
 	"github.com/Mattouff/Lending-Borrowing/internal/domain/models"
-	"slices"
+	"github.com/Mattouff/Lending-Borrowing/internal/domain/service"
 )
 
 // AuthClaims extends JWT standard claims with user information
@@ -21,7 +22,7 @@ type AuthClaims struct {
 }
 
 // Authentication middleware to verify JWT tokens
-func Authentication(cfg *config.Config) fiber.Handler {
+func Authentication(cfg *config.Config, authService service.AuthService) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		// Get authorization header
 		authHeader := c.Get("Authorization")
@@ -39,29 +40,16 @@ func Authentication(cfg *config.Config) fiber.Handler {
 		// Get the token
 		tokenString := parts[1]
 
-		// Parse and validate the token
-		claims := &AuthClaims{}
-		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (any, error) {
-			// Validate the signing algorithm
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, errors.New("unexpected signing method")
-			}
-			// Return the secret key
-			return []byte(cfg.JWT.Secret), nil
-		})
-
-		if err != nil {
-			return fiber.NewError(fiber.StatusUnauthorized, "Invalid or expired token")
-		}
-
-		if !token.Valid {
-			return fiber.NewError(fiber.StatusUnauthorized, "Invalid token")
-		}
+        // Validate token using auth service
+        user, err := authService.ValidateToken(c.Context(), tokenString)
+        if err != nil {
+            return fiber.NewError(fiber.StatusUnauthorized, "Invalid or expired token: "+err.Error())
+        }
 
 		// Store user information in the context
-		c.Locals("userID", claims.UserID)
-		c.Locals("address", claims.Address)
-		c.Locals("role", claims.Role)
+		c.Locals("userID", user.ID)
+		c.Locals("address", user.Address)
+		c.Locals("role", user.Role)
 
 		return c.Next()
 	}

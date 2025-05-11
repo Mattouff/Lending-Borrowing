@@ -36,6 +36,12 @@ services:
       CONTRACT_ADDRESSES: ${CONTRACT_ADDRESSES}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRE: ${JWT_EXPIRE}
+
+      # Valkey settings
+      VALKEY_HOST: valkey
+      VALKEY_PORT: ${VALKEY_PORT}
+      VALKEY_PASSWORD: ${VALKEY_PASSWORD}
+      VALKEY_DB: ${VALKEY_DB}
     volumes:
       - ./backend:/app
     restart: unless-stopped
@@ -63,5 +69,20 @@ services:
       timeout: 5s
       retries: 5
 
+  valkey:
+    image: valkey/valkey:8.1
+    container_name: lending-borrowing-valkey-dev
+    ports:
+      - "${VALKEY_PORT}:6379"
+    command: ["--appendonly", "yes"]
+    volumes:
+      - valkey-data-dev:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres-data-dev:
+  valkey-data-dev:

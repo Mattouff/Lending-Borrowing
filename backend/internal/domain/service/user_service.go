@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"time"
 
 	"github.com/Mattouff/Lending-Borrowing/internal/domain/models"
 )
@@ -27,7 +28,7 @@ type UserService interface {
 	VerifySignature(ctx context.Context, address, message, signature string) (bool, error)
 
 	// GenerateAuthToken generates an authentication token for a user
-	GenerateAuthToken(ctx context.Context, user *models.User) (string, error)
+	GenerateAuthToken(ctx context.Context, user *models.User) (string, time.Time, error)
 
 	// ListUsers retrieves all users with optional pagination
 	ListUsers(ctx context.Context, offset, limit int) ([]*models.User, error)

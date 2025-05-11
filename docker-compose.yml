@@ -8,6 +8,7 @@ services:
       - "${SERVER_PORT}:${SERVER_PORT}"
     depends_on:
       - postgres
+      - valkey
     environment:
       # Application settings
       APP_NAME: ${APP_NAME}
@@ -41,6 +42,12 @@ services:
       # JWT settings
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRE: ${JWT_EXPIRE}
+
+      # Valkey settings
+      VALKEY_HOST: valkey
+      VALKEY_PORT: ${VALKEY_PORT}
+      VALKEY_PASSWORD: ${VALKEY_PASSWORD}
+      VALKEY_DB: ${VALKEY_DB}
     restart: unless-stopped
     healthcheck:
       test:
@@ -67,5 +74,20 @@ services:
       timeout: 5s
       retries: 5
 
+  valkey:
+    image: valkey/valkey:8.1
+    container_name: lending-borrowing-valkey
+    ports:
+      - "${VALKEY_PORT}:6379"
+    command: ["--appendonly", "yes"]
+    volumes:
+      - valkey-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres-data:
+  valkey-data:
