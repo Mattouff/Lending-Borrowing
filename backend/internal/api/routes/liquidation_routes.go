@@ -10,7 +10,7 @@ import (
 )
 
 // SetupLiquidationRoutes configures the routes for liquidation operations
-func SetupLiquidationRoutes(router fiber.Router, liquidationService service.LiquidationService, cfg *config.Config) {
+func SetupLiquidationRoutes(router fiber.Router, liquidationService service.LiquidationService, authService service.AuthService, cfg *config.Config) {
 	// Create handler
 	liquidationHandler := handlers.NewLiquidationHandler(liquidationService)
 
@@ -23,6 +23,6 @@ func SetupLiquidationRoutes(router fiber.Router, liquidationService service.Liqu
 	liquidationRouter.Get("/bonus", liquidationHandler.GetLiquidationBonus)
 
 	// Protected routes (require authentication)
-	liquidationRouter.Use(middleware.Authentication(cfg))
+	liquidationRouter.Use(middleware.Authentication(cfg, authService))
 	liquidationRouter.Post("/liquidate", liquidationHandler.Liquidate)
 }

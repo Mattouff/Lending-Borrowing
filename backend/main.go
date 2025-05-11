@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 
+	_ "github.com/Mattouff/Lending-Borrowing/docs"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/swagger"
-	_ "github.com/Mattouff/Lending-Borrowing/docs"
 
 	"github.com/Mattouff/Lending-Borrowing/internal/api/middleware"
 	"github.com/Mattouff/Lending-Borrowing/internal/api/routes"
@@ -14,6 +14,7 @@ import (
 	"github.com/Mattouff/Lending-Borrowing/internal/infrastructure/blockchain"
 	"github.com/Mattouff/Lending-Borrowing/internal/infrastructure/persistence/postgres"
 	"github.com/Mattouff/Lending-Borrowing/internal/service"
+	valkey "github.com/Mattouff/Lending-Borrowing/pkg/cache"
 	"github.com/Mattouff/Lending-Borrowing/pkg/database"
 )
 
@@ -47,6 +48,13 @@ func main() {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
 
+	// Initialize Valkey client
+	valkeyClient, err := valkey.NewClient(cfg)
+	if err != nil {
+		log.Fatalf("Failed to initialize Valkey client: %v", err)
+	}
+	defer valkeyClient.Close()
+
 	// Initialize Ethereum client
 	ethClient := blockchain.GetInstance()
 	if err := ethClient.Initialize(
@@ -67,7 +75,13 @@ func main() {
 	positionRepo := repoFactory.GetPositionRepository()
 
 	// Initialize services
-	userService := service.NewUserService(userRepo, cfg)
+	authService := service.NewAuthService(
+		cfg,
+		userRepo,
+		valkeyClient,
+	)
+
+	userService := service.NewUserService(userRepo, cfg, authService)
 
 	// Initialize collateral service first since borrowing service depends on it
 	collateralService, err := service.NewCollateralService(
@@ -124,6 +138,8 @@ func main() {
 		BorrowingService:   borrowingService,
 		CollateralService:  collateralService,
 		LiquidationService: liquidationService,
+		AuthService:        authService,
+		ValkeyClient:       valkeyClient,
 	}
 
 	// Create repositories container to pass to routes

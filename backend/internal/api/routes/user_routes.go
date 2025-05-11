@@ -11,9 +11,9 @@ import (
 )
 
 // SetupUserRoutes configures the routes for user management
-func SetupUserRoutes(router fiber.Router, userService service.UserService, cfg *config.Config) {
+func SetupUserRoutes(router fiber.Router, userService service.UserService, authService service.AuthService, cfg *config.Config) {
 	// Create handler
-	userHandler := handlers.NewUserHandler(userService, cfg)
+	userHandler := handlers.NewUserHandler(userService, authService, cfg)
 
 	// User routes
 	userRouter := router.Group("/users")
@@ -24,7 +24,7 @@ func SetupUserRoutes(router fiber.Router, userService service.UserService, cfg *
 	userRouter.Get("/nonce/:address", userHandler.NonceMessage)
 
 	// Protected routes (require authentication)
-	userRouter.Use(middleware.Authentication(cfg))
+	userRouter.Use(middleware.Authentication(cfg, authService))
 	userRouter.Get("/profile", userHandler.GetProfile)
 	userRouter.Put("/profile", userHandler.UpdateProfile)
 	userRouter.Delete("/account", userHandler.DeleteAccount)

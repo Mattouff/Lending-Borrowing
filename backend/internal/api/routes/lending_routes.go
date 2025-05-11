@@ -10,7 +10,7 @@ import (
 )
 
 // SetupLendingRoutes configures the routes for lending operations
-func SetupLendingRoutes(router fiber.Router, lendingService service.LendingService, cfg *config.Config) {
+func SetupLendingRoutes(router fiber.Router, lendingService service.LendingService, authService service.AuthService, cfg *config.Config) {
 	// Create handler
 	lendingHandler := handlers.NewLendingHandler(lendingService)
 
@@ -21,7 +21,7 @@ func SetupLendingRoutes(router fiber.Router, lendingService service.LendingServi
 	lendingRouter.Get("/pool-info", lendingHandler.GetPoolInfo)
 
 	// Protected routes (require authentication)
-	lendingRouter.Use(middleware.Authentication(cfg))
+	lendingRouter.Use(middleware.Authentication(cfg, authService))
 	lendingRouter.Post("/deposit", lendingHandler.Deposit)
 	lendingRouter.Post("/withdraw", lendingHandler.Withdraw)
 	lendingRouter.Get("/balance", lendingHandler.GetLendingBalance)
