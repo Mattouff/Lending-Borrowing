@@ -43,7 +43,7 @@ func Authentication(cfg *config.Config, authService service.AuthService) fiber.H
         // Validate token using auth service
         user, err := authService.ValidateToken(c.Context(), tokenString)
         if err != nil {
-            return fiber.NewError(fiber.StatusUnauthorized, "Invalid or expired token: "+err.Error())
+            return fiber.NewError(fiber.StatusUnauthorized, "Invalid or expired token")
         }
 
 		// Store user information in the context
