@@ -33,6 +33,7 @@ The backend follows a clean architecture pattern with:
 - **Fiber**: Fast HTTP framework for REST API
 - **GORM**: ORM for PostgreSQL database access
 - **JWT**: Used for authentication and authorization
+- **Valkey**: Redis-compatible cache for JWT validation and revocation
 - **Swagger**: API documentation
 - **Docker**: Containerization for development and deployment
 - **Foundry**: Smart contract deployment and interaction
@@ -60,7 +61,8 @@ backend/
 │   └── service/           # Service implementations
 ├── pkg/                   # Reusable packages
 │   ├── blockchain/        # Blockchain utilities
-│   └── database/          # Database utilities
+│   ├── database/          # Database utilities
+│   └── cache/             # Cache utilities
 ├── docs/                  # Swagger documentation
 ├── scripts/               # Utility scripts
 └── main.go                # Application entry point
@@ -74,6 +76,7 @@ backend/
 - Docker and Docker Compose
 - Foundry (for blockchain development)
 - PostgreSQL (or use Docker container)
+- Valkey (or use Docker container)
 
 ### Setup Process
 
@@ -143,27 +146,34 @@ SERVER_HOST=0.0.0.0
 SERVER_PORT=8080
 
 # Database settings
-DB_HOST=postgres
+DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
-DB_PASSWORD=password
+DB_PASSWORD=
 DB_NAME=lending_borrowing
 DB_SSLMODE=[disable|require]
 DB_TIMEZONE=UTC
 
+# Valkey settings
+VALKEY_HOST=localhost
+VALKEY_PORT=6379
+VALKEY_PASSWORD=
+VALKEY_DB=0
+
 # Blockchain settings
 BLOCKCHAIN_RPC_URL=http://localhost:8545
 BLOCKCHAIN_NETWORK=[local|mainnet|sepolia|etc]
-BLOCKCHAIN_CHAIN_ID=31337
+BLOCKCHAIN_CHAIN_ID=1337
 BLOCKCHAIN_GAS_LIMIT=3000000
 BLOCKCHAIN_GAS_PRICE=20000000000
 
-# Contract addresses
+# Contract addresses (format: NAME=ADDRESS,NAME2=ADDRESS2)
 CONTRACT_ADDRESSES=LendingPool=0x...,Token=0x...,Borrowing=0x...,Collateral=0x...
 
 # JWT settings
-JWT_SECRET=your_secure_secret
-JWT_EXPIRE=24
+JWT_SECRET=your-256-bit-secret
+# In minutes
+JWT_EXPIRE=1440
 ```
 
 ## API Documentation
@@ -183,10 +193,12 @@ http://localhost:8080/swagger/
 - `GET /api/v1/users/nonce/:address` - Get nonce for address
 - `GET /api/v1/users/profile` - Get user profile (auth required)
 - `PUT /api/v1/users/profile` - Update user profile (auth required)
+- `DELETE /api/v1/users/account` - Delete user account (auth required)
 - `GET /api/v1/users/admin` - List all users (admin only)
 - `GET /api/v1/users/admin/:id` - Get user by ID (admin only)
 - `GET /api/v1/users/admin/address/:address` - Get user by address (admin only)
 - `PUT /api/v1/users/admin/:id/verify` - Verify user (admin only)
+- `DELETE /api/v1/users/admin/:id` - Delete user (admin only)
 
 #### Lending Operations
 
@@ -225,11 +237,12 @@ http://localhost:8080/swagger/
 - `GET /api/v1/market/overview` - Get market overview
 - `GET /api/v1/market/tokens` - Get tokens market data
 
-#### Health Check
+#### System Health and Diagnostics
 
-- `GET /api/v1/health` - Health check endpoint
+- `GET /api/health` - General health check
+- `GET /api/health/valkey` - Valkey health check
 
-### Authentication
+### Authentication System
 
 The API uses JWT for authentication. Include the token in your request header:
 
@@ -237,7 +250,55 @@ The API uses JWT for authentication. Include the token in your request header:
 Authorization: Bearer <your_jwt_token>
 ```
 
-### Authentication Workflow with Anvil
+**Valkey-based JWT Validation**
+
+The platform implements a Valkey-based JWT validation system that provides immediate token revocation capabilities, which is critical for financial applications.
+
+#### Key Components
+
+1. **JWT Generation**: When users authenticate, a JWT token with a unique ID (JTI) is generated
+2. **Token Storage**: Valid token IDs are stored in Valkey with user ID as the key
+3. **Token Validation**: Every authenticated request verifies the token against Valkey
+4. **Token Revocation**: When a user is deleted or logs out, all their tokens are immediately invalidated
+
+#### Performance Optimization
+
+1. **In-Memory Cache**: A local cache with a short TTL reduces Valkey lookups
+2. **Graceful Fallback**: If Valkey is temporarily unavailable, the system has fallback mechanisms
+3. **Cache Invalidation**: Proper invalidation ensures consistency between memory and Valkey
+
+#### Authentication Workflow
+
+```mermaid
+sequenceDiagram
+    User->>API Server: Authenticate with wallet signature
+    API Server->>Database: Verify user exists
+    Database-->>API Server: User verification
+    API Server->>API Server: Generate JWT with unique ID
+    API Server->>Valkey: Store token ID with user ID as key
+    API Server-->>User: Return JWT token
+
+    User->>API Server: API request with JWT
+    API Server->>API Server: Verify JWT signature
+    API Server->>Valkey: Check if token ID is valid
+    Valkey-->>API Server: Token validation result
+    API Server->>Database: Get user if token is valid
+    Database-->>API Server: User data
+    API Server-->>User: Requested resource
+
+    User->>API Server: Delete user
+    API Server->>Valkey: Remove all tokens for user
+    API Server->>Database: Soft delete user
+    API Server-->>User: Account deleted confirmation
+    
+    User->>API Server: API request with old JWT
+    API Server->>API Server: Verify JWT signature
+    API Server->>Valkey: Check if token ID is valid
+    Valkey-->>API Server: Token not found
+    API Server-->>User: Unauthorized (401)
+```
+
+### Authentication Example Workflow with Anvil
 
 For local development, you can use Anvil's private keys to sign authentication messages. Here's a complete workflow:
 
@@ -398,7 +459,7 @@ docker-compose --env-file ./backend/.env.dev -f docker-compose.dev.yml up -d
 
 The application includes several middleware components:
 
-- **Authentication**: JWT-based auth (`middleware/auth.go`)
+- **Authentication**: JWT-based auth with Valkey validation (`middleware/auth.go`)
 - **CORS**: Cross-Origin Resource Sharing (`middleware/cors.go`)
 - **Error Handler**: Centralized error handling (`middleware/error_handler.go`)
 - **Logger**: Request logging (`middleware/logger.go`)
@@ -460,6 +521,13 @@ go test github.com/Mattouff/Lending-Borrowing/internal/api/handlers -v
    - Verify contract addresses in `.env` file
    - Check RPC URL and port forwarding
 
+3. **Valkey Connection Issues**
+
+   - Verify Valkey container is running: `docker ps`
+   - Check Valkey configuration in `.env` file
+   - Ensure network connectivity between API and Valkey containers
+   - Check Valkey logs: `docker logs lending-borrowing-valkey-dev`
+
 3. **CORS Issues**
 
    - Update CORS configuration in `middleware/cors.go`
@@ -475,6 +543,7 @@ Access container logs:
 
 ```bash
 docker logs lending-borrowing-api-dev
+docker logs lending-borrowing-valkey-dev
 ```
 
 ---

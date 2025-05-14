@@ -32,7 +32,7 @@ graph TD
         BlockchainService[Blockchain Service]
         Liquidator[Liquidation Service]
         InterestCalculator[Interest Rate Manager]
-        Cache[Data Cache]
+        Cache[Valkey Cache]
         DB[(PostgreSQL)]
     end
 
@@ -139,11 +139,13 @@ graph TD
 - **Dynamic Interest Rates**: Interest rates adjust based on pool utilization.
 - **Automatic Liquidations**: Positions below the required collateral ratio are liquidated.
 - **User Dashboard**: Track all lending and borrowing activities in one place.
+- **Secure Authentication**: Ethereum wallet-based authentication with immediate revocation capability.
+
 
 ## Technical Stack
 
 - **Smart Contracts**: Solidity, Foundry
-- **Backend**: Go, Fiber, GORM, PostgreSQL
+- **Backend**: Go, Fiber, GORM, PostgreSQL, Valkey
 - **Frontend**: React.js/Vue.js, Web3.js/Ethers.js
 - **DevOps**: Docker, GitHub Actions
 - **Testing**: Foundry tests for contracts, Go test for backend
@@ -158,6 +160,7 @@ graph TD
 - Foundry (for blockchain development)
 - Ethereum wallet (e.g., MetaMask)
 - PostgreSQL (or use Docker container)
+- Valkey (or use Docker container)
 
 ### Installation
 
