@@ -1,17 +1,12 @@
-FROM golang:1.24-alpine AS build
+FROM golang:1.24-alpine AS builder
 
-WORKDIR /api
+# Install git and build essentials
+RUN apk add --no-cache git make gcc musl-dev
 
-# Install required packages
-RUN apk add --no-cache git
+# Set working directory
+WORKDIR /app
 
-# Installation des certificats CA, cruciaux pour les appels HTTPS.
-RUN apk add --no-cache ca-certificates
-
-# Installation de Swag CLI pour la documentation Swagger.
-#RUN go install github.com/swaggo/swag/cmd/swag@latest
-
-# Copy go mod and sum files first to leverage Docker cache
+# Copy go mod and sum files
 COPY go.mod go.sum ./
 
 # Download dependencies
@@ -20,25 +15,26 @@ RUN go mod download
 # Copy source code
 COPY . .
 
-# Génération de la documentation Swagger.
-#RUN swag init --generalInfo ./routes/swagger_routes.go --output ./docs
+# Generate swagger docs
+RUN go install github.com/swaggo/swag/cmd/swag@latest
+RUN swag init
 
-# Configuration des variables d'environnement nécessaires pour la construction.
-ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
+# Build the application
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 
-# Construction du serveur API.
-RUN go build -v -o apiserver .
+# Create a minimal production image
+FROM alpine:latest
 
-# Utilisation d'une image scratch pour un environnement d'exécution minimal.
-FROM scratch
+RUN apk --no-cache add ca-certificates tzdata
 
-# Copie du binaire, des fichiers de configuration, et de la documentation Swagger.
-COPY --from=build /api/apiserver /
-COPY --from=build /api/.env /
-#COPY --from=build /api/docs /docs
+WORKDIR /root/
 
-# Copie des certificats CA.
-COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+# Copy the binary from builder
+COPY --from=builder /app/main .
+COPY --from=builder /app/docs ./docs
 
-# Command for verifying the binary
-CMD ["./apiserver"]
+# Expose the application port
+EXPOSE 8080
+
+# Run the binary
+CMD ["./main"]

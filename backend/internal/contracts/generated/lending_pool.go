@@ -146,7 +146,7 @@ func bindLendingPool(address common.Address, caller bind.ContractCaller, transac
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_LendingPool *LendingPoolRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
+func (_LendingPool *LendingPoolRaw) Call(opts *bind.CallOpts, result *[]any, method string, params ...any) error {
 	return _LendingPool.Contract.LendingPoolCaller.contract.Call(opts, result, method, params...)
 }
 
@@ -157,7 +157,7 @@ func (_LendingPool *LendingPoolRaw) Transfer(opts *bind.TransactOpts) (*types.Tr
 }
 
 // Transact invokes the (paid) contract method with params as input values.
-func (_LendingPool *LendingPoolRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+func (_LendingPool *LendingPoolRaw) Transact(opts *bind.TransactOpts, method string, params ...any) (*types.Transaction, error) {
 	return _LendingPool.Contract.LendingPoolTransactor.contract.Transact(opts, method, params...)
 }
 
@@ -165,7 +165,7 @@ func (_LendingPool *LendingPoolRaw) Transact(opts *bind.TransactOpts, method str
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_LendingPool *LendingPoolCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
+func (_LendingPool *LendingPoolCallerRaw) Call(opts *bind.CallOpts, result *[]any, method string, params ...any) error {
 	return _LendingPool.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -176,7 +176,7 @@ func (_LendingPool *LendingPoolTransactorRaw) Transfer(opts *bind.TransactOpts) 
 }
 
 // Transact invokes the (paid) contract method with params as input values.
-func (_LendingPool *LendingPoolTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+func (_LendingPool *LendingPoolTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...any) (*types.Transaction, error) {
 	return _LendingPool.Contract.contract.Transact(opts, method, params...)
 }
 
@@ -184,7 +184,7 @@ func (_LendingPool *LendingPoolTransactorRaw) Transact(opts *bind.TransactOpts, 
 //
 // Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_LendingPool *LendingPoolCaller) Allowance(opts *bind.CallOpts, owner common.Address, spender common.Address) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _LendingPool.contract.Call(opts, &out, "allowance", owner, spender)
 
 	if err != nil {
@@ -215,7 +215,7 @@ func (_LendingPool *LendingPoolCallerSession) Allowance(owner common.Address, sp
 //
 // Solidity: function annualInterestRate() view returns(uint256)
 func (_LendingPool *LendingPoolCaller) AnnualInterestRate(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _LendingPool.contract.Call(opts, &out, "annualInterestRate")
 
 	if err != nil {
@@ -246,7 +246,7 @@ func (_LendingPool *LendingPoolCallerSession) AnnualInterestRate() (*big.Int, er
 //
 // Solidity: function balanceOf(address account) view returns(uint256)
 func (_LendingPool *LendingPoolCaller) BalanceOf(opts *bind.CallOpts, account common.Address) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _LendingPool.contract.Call(opts, &out, "balanceOf", account)
 
 	if err != nil {
@@ -277,7 +277,7 @@ func (_LendingPool *LendingPoolCallerSession) BalanceOf(account common.Address) 
 //
 // Solidity: function decimals() view returns(uint8)
 func (_LendingPool *LendingPoolCaller) Decimals(opts *bind.CallOpts) (uint8, error) {
-	var out []interface{}
+	var out []any
 	err := _LendingPool.contract.Call(opts, &out, "decimals")
 
 	if err != nil {
@@ -308,7 +308,7 @@ func (_LendingPool *LendingPoolCallerSession) Decimals() (uint8, error) {
 //
 // Solidity: function getAllLendingToken() view returns(uint256)
 func (_LendingPool *LendingPoolCaller) GetAllLendingToken(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _LendingPool.contract.Call(opts, &out, "getAllLendingToken")
 
 	if err != nil {
@@ -339,7 +339,7 @@ func (_LendingPool *LendingPoolCallerSession) GetAllLendingToken() (*big.Int, er
 //
 // Solidity: function getLendingToken(address user) view returns(uint256)
 func (_LendingPool *LendingPoolCaller) GetLendingToken(opts *bind.CallOpts, user common.Address) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _LendingPool.contract.Call(opts, &out, "getLendingToken", user)
 
 	if err != nil {
@@ -370,7 +370,7 @@ func (_LendingPool *LendingPoolCallerSession) GetLendingToken(user common.Addres
 //
 // Solidity: function lastUpdate(address ) view returns(uint256)
 func (_LendingPool *LendingPoolCaller) LastUpdate(opts *bind.CallOpts, arg0 common.Address) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _LendingPool.contract.Call(opts, &out, "lastUpdate", arg0)
 
 	if err != nil {
@@ -401,7 +401,7 @@ func (_LendingPool *LendingPoolCallerSession) LastUpdate(arg0 common.Address) (*
 //
 // Solidity: function lendingBalance(address ) view returns(uint256)
 func (_LendingPool *LendingPoolCaller) LendingBalance(opts *bind.CallOpts, arg0 common.Address) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _LendingPool.contract.Call(opts, &out, "lendingBalance", arg0)
 
 	if err != nil {
@@ -432,7 +432,7 @@ func (_LendingPool *LendingPoolCallerSession) LendingBalance(arg0 common.Address
 //
 // Solidity: function name() view returns(string)
 func (_LendingPool *LendingPoolCaller) Name(opts *bind.CallOpts) (string, error) {
-	var out []interface{}
+	var out []any
 	err := _LendingPool.contract.Call(opts, &out, "name")
 
 	if err != nil {
@@ -463,7 +463,7 @@ func (_LendingPool *LendingPoolCallerSession) Name() (string, error) {
 //
 // Solidity: function symbol() view returns(string)
 func (_LendingPool *LendingPoolCaller) Symbol(opts *bind.CallOpts) (string, error) {
-	var out []interface{}
+	var out []any
 	err := _LendingPool.contract.Call(opts, &out, "symbol")
 
 	if err != nil {
@@ -494,7 +494,7 @@ func (_LendingPool *LendingPoolCallerSession) Symbol() (string, error) {
 //
 // Solidity: function totalLending() view returns(uint256)
 func (_LendingPool *LendingPoolCaller) TotalLending(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _LendingPool.contract.Call(opts, &out, "totalLending")
 
 	if err != nil {
@@ -525,7 +525,7 @@ func (_LendingPool *LendingPoolCallerSession) TotalLending() (*big.Int, error) {
 //
 // Solidity: function totalSupply() view returns(uint256)
 func (_LendingPool *LendingPoolCaller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
+	var out []any
 	err := _LendingPool.contract.Call(opts, &out, "totalSupply")
 
 	if err != nil {
@@ -556,7 +556,7 @@ func (_LendingPool *LendingPoolCallerSession) TotalSupply() (*big.Int, error) {
 //
 // Solidity: function underlying() view returns(address)
 func (_LendingPool *LendingPoolCaller) Underlying(opts *bind.CallOpts) (common.Address, error) {
-	var out []interface{}
+	var out []any
 	err := _LendingPool.contract.Call(opts, &out, "underlying")
 
 	if err != nil {
@@ -789,11 +789,11 @@ type LendingPoolApproval struct {
 // Solidity: event Approval(address indexed owner, address indexed spender, uint256 value)
 func (_LendingPool *LendingPoolFilterer) FilterApproval(opts *bind.FilterOpts, owner []common.Address, spender []common.Address) (*LendingPoolApprovalIterator, error) {
 
-	var ownerRule []interface{}
+	var ownerRule []any
 	for _, ownerItem := range owner {
 		ownerRule = append(ownerRule, ownerItem)
 	}
-	var spenderRule []interface{}
+	var spenderRule []any
 	for _, spenderItem := range spender {
 		spenderRule = append(spenderRule, spenderItem)
 	}
@@ -810,11 +810,11 @@ func (_LendingPool *LendingPoolFilterer) FilterApproval(opts *bind.FilterOpts, o
 // Solidity: event Approval(address indexed owner, address indexed spender, uint256 value)
 func (_LendingPool *LendingPoolFilterer) WatchApproval(opts *bind.WatchOpts, sink chan<- *LendingPoolApproval, owner []common.Address, spender []common.Address) (event.Subscription, error) {
 
-	var ownerRule []interface{}
+	var ownerRule []any
 	for _, ownerItem := range owner {
 		ownerRule = append(ownerRule, ownerItem)
 	}
-	var spenderRule []interface{}
+	var spenderRule []any
 	for _, spenderItem := range spender {
 		spenderRule = append(spenderRule, spenderItem)
 	}
@@ -943,11 +943,11 @@ type LendingPoolTransfer struct {
 // Solidity: event Transfer(address indexed from, address indexed to, uint256 value)
 func (_LendingPool *LendingPoolFilterer) FilterTransfer(opts *bind.FilterOpts, from []common.Address, to []common.Address) (*LendingPoolTransferIterator, error) {
 
-	var fromRule []interface{}
+	var fromRule []any
 	for _, fromItem := range from {
 		fromRule = append(fromRule, fromItem)
 	}
-	var toRule []interface{}
+	var toRule []any
 	for _, toItem := range to {
 		toRule = append(toRule, toItem)
 	}
@@ -964,11 +964,11 @@ func (_LendingPool *LendingPoolFilterer) FilterTransfer(opts *bind.FilterOpts, f
 // Solidity: event Transfer(address indexed from, address indexed to, uint256 value)
 func (_LendingPool *LendingPoolFilterer) WatchTransfer(opts *bind.WatchOpts, sink chan<- *LendingPoolTransfer, from []common.Address, to []common.Address) (event.Subscription, error) {
 
-	var fromRule []interface{}
+	var fromRule []any
 	for _, fromItem := range from {
 		fromRule = append(fromRule, fromItem)
 	}
-	var toRule []interface{}
+	var toRule []any
 	for _, toItem := range to {
 		toRule = append(toRule, toItem)
 	}

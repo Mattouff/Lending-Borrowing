@@ -27,12 +27,13 @@ graph TD
     subgraph "Backend (Golang)"
         Server[Fiber API Server]
         BL[Business Logic]
+        UserService[User Service]
         Repos[Data Repositories]
         BlockchainService[Blockchain Service]
         Liquidator[Liquidation Service]
         InterestCalculator[Interest Rate Manager]
         Cache[Data Cache]
-        DB[(PostgreSQL/Supabase)]
+        DB[(PostgreSQL)]
     end
 
     subgraph "Smart Contracts (Solidity)"
@@ -65,10 +66,12 @@ graph TD
 
     %% Backend Internal Connections
     Server --> BL
+    BL --> UserService
     BL --> Repos
     BL --> BlockchainService
     BL --> Liquidator
     BL --> InterestCalculator
+    UserService --> Repos
     Repos --> DB
     Repos --> Cache
 
@@ -81,8 +84,8 @@ graph TD
     %% Smart Contract Connections
     LendingPool --> Token
     Borrowing --> Token
-    Borrowing --> LendingPool
-    Collateral --> Borrowing
+    Borrowing --> Collateral
+    Collateral --> Token
     LendingPool --> Interest
     Borrowing --> Interest
 
@@ -109,12 +112,16 @@ graph TD
 
 ### Backend (Golang)
 
-- **Web Server**: Built with Fiber, handles API requests and websocket connections.
+- **Web Server**: Built with Fiber, a fast and efficient HTTP framework for handling API requests.
 - **Business Logic**: Core services for lending, borrowing, collateral management, and liquidations.
-- **Blockchain Integration**: Services to interact with deployed smart contracts.
-- **Database**: PostgreSQL (via Supabase) for storing transaction history and user data.
-- **Monitoring**: Tracks collateral ratios and initiates liquidations when necessary.
-- **Security**: Authentication, authorization, and secure blockchain interactions.
+- **API Documentation**: Swagger integration for comprehensive API documentation.
+- **Blockchain Integration**: Services to interact with deployed smart contracts via Go bindings.
+- **Database**: PostgreSQL for storing transaction history, user data, and positions.
+- **Middleware**: Authentication, CORS, error handling, and request logging.
+- **Repository Pattern**: Clean separation of data access from business logic.
+- **Environment Configuration**: Support for development, staging, and production environments.
+- **Docker Integration**: Containerized deployment for consistent environment setup.
+- **Hot Reload**: Development environment with Air for instant code changes reflection.
 
 ### Frontend (React.js or Vue.js)
 
@@ -145,19 +152,20 @@ graph TD
 
 ### Prerequisites
 
-- Go 1.19+
+- Go 1.21+
 - Node.js 16+
 - Docker and Docker Compose
-- Foundry (for smart contract development)
+- Foundry (for blockchain development)
 - Ethereum wallet (e.g., MetaMask)
+- PostgreSQL (or use Docker container)
 
 ### Installation
 
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/defi-lending-platform.git
-   cd defi-lending-platform
+   git clone https://github.com/Mattouff/Lending-Borrowing.git
+   cd Lending-Borrowing
    ```
 
 2. Install backend dependencies:
@@ -193,42 +201,42 @@ graph TD
 
 ### Running the Project Locally
 
-1. Start the local database:
+1. Start Anvil (local Ethereum node):
 
    ```bash
-   cd backend
-   docker-compose up -d
+   anvil --mnemonic "test test test test test test test test test test test junk"
    ```
 
-2. Compile and deploy the smart contracts to a local blockchain:
+2. Compile and deploy the smart contracts:
 
    ```bash
-   cd ../contracts
+   cd contracts
    forge build
-   forge script script/Deploy.s.sol --rpc-url localhost:8545 --broadcast
+   forge script script/Deploy.s.sol --fork-url http://localhost:8545 --broadcast
    ```
 
-3. Generate contract bindings for Go:
+3. Note the deployed contract addresses and update the backend environment variables:
 
    ```bash
-   cd ../backend
-   make generate-bindings
+   # Update CONTRACT_ADDRESSES in backend/.env.dev with the addresses from step 2
    ```
 
-4. Start the backend server:
+4. Start the backend using Docker Compose:
 
    ```bash
-   go run cmd/api/main.go
+   docker-compose --env-file ./backend/.env.dev -f docker-compose.dev.yml up -d
    ```
 
-5. Start the frontend development server:
+5. Access Swagger API documentation at http://localhost:8080/swagger/
+
+6. Start the frontend development server:
 
    ```bash
-   cd ../frontend
+   cd frontend
    npm run dev
    ```
 
-6. Access the application at http://localhost:3000
+7. Access the application at http://localhost:3000
 
 ## Testing
 
@@ -272,8 +280,8 @@ The backend can be deployed using Docker to any cloud provider that supports con
 
 ```bash
 cd backend
-docker build -t defi-lending-backend .
-docker push yourusername/defi-lending-backend
+docker build -t lending-borrowing-api .
+docker push yourusername/lending-borrowing-api
 ```
 
 ### Frontend
@@ -288,9 +296,9 @@ npm run build
 ## Contributing
 
 1. Fork the repository
-2. Create your feature branch: `git checkout -b feature/my-new-feature`
+2. Create your feature branch: `git checkout -b feat/my-new-feature`
 3. Commit your changes: `git commit -am 'Add some feature'`
-4. Push to the branch: `git push origin feature/my-new-feature`
+4. Push to the branch: `git push origin feat/my-new-feature`
 5. Submit a pull request
 
 ## License
