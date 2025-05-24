@@ -10,7 +10,7 @@ import (
 )
 
 // SetupCollateralRoutes configures the routes for collateral management
-func SetupCollateralRoutes(router fiber.Router, collateralService service.CollateralService, cfg *config.Config) {
+func SetupCollateralRoutes(router fiber.Router, collateralService service.CollateralService, authService service.AuthService, cfg *config.Config) {
 	// Create handler
 	collateralHandler := handlers.NewCollateralHandler(collateralService)
 
@@ -18,7 +18,7 @@ func SetupCollateralRoutes(router fiber.Router, collateralService service.Collat
 	collateralRouter := router.Group("/collateral")
 
 	// Protected routes (require authentication)
-	collateralRouter.Use(middleware.Authentication(cfg))
+	collateralRouter.Use(middleware.Authentication(cfg, authService))
 	collateralRouter.Post("/deposit", collateralHandler.DepositCollateral)
 	collateralRouter.Post("/withdraw", collateralHandler.WithdrawCollateral)
 	collateralRouter.Get("/balance", collateralHandler.GetCollateralBalance)

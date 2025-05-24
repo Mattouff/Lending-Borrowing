@@ -35,7 +35,7 @@ type UserResponse struct {
 	Username  string    `json:"username"`
 	Role      UserRole  `json:"role"`
 	Verified  bool      `json:"verified"`
-	LastLogin time.Time `json:"lastLogin,omitempty"`
+	LastLogin time.Time `json:"lastLogin"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
@@ -51,6 +51,7 @@ type UserListResponse struct {
 
 // AuthResponse represents the response after successful authentication
 type AuthResponse struct {
-	User  UserResponse `json:"user"`
-	Token string       `json:"token"`
+	User      UserResponse `json:"user"`
+	Token     string       `json:"token"`
+	ExpiresAt time.Time    `json:"expiresAt"`
 }

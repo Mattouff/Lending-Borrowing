@@ -7,7 +7,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/golang-jwt/jwt/v4"
 
 	"fmt"
 
@@ -18,15 +17,17 @@ import (
 )
 
 type userService struct {
-	userRepo repository.UserRepository
-	cfg      *config.Config
+	userRepo    repository.UserRepository
+	cfg         *config.Config
+	authService service.AuthService
 }
 
 // NewUserService creates a new user service
-func NewUserService(userRepo repository.UserRepository, cfg *config.Config) service.UserService {
+func NewUserService(userRepo repository.UserRepository, cfg *config.Config, authService service.AuthService) service.UserService {
 	return &userService{
-		userRepo: userRepo,
-		cfg:      cfg,
+		userRepo:    userRepo,
+		cfg:         cfg,
+		authService: authService,
 	}
 }
 
@@ -109,33 +110,6 @@ func (s *userService) VerifySignature(ctx context.Context, address, message, sig
 	return recoveredAddr.Hex() == common.HexToAddress(address).Hex(), nil
 }
 
-// GenerateAuthToken generates an authentication token for a user
-func (s *userService) GenerateAuthToken(ctx context.Context, user *models.User) (string, error) {
-	// Create JWT claims
-	claims := jwt.MapClaims{
-		"address": user.Address,
-		"id":      user.ID,
-		"role":    user.Role,
-		"exp":     time.Now().Add(time.Duration(s.cfg.JWT.ExpireTime) * time.Hour).Unix(),
-	}
-
-	// Create token with claims
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	// Sign the token with the secret key
-	tokenString, err := token.SignedString([]byte(s.cfg.JWT.Secret))
-	if err != nil {
-		return "", err
-	}
-
-	// Update user's last login time
-	now := time.Now()
-	user.LastLogin = &now
-	s.userRepo.Update(ctx, user)
-
-	return tokenString, nil
-}
-
 // ListUsers retrieves all users with optional pagination
 func (s *userService) ListUsers(ctx context.Context, offset, limit int) ([]*models.User, error) {
 	return s.userRepo.List(ctx, offset, limit)
@@ -159,7 +133,19 @@ func (s *userService) CountWithFilter(ctx context.Context, filter map[string]any
 	return s.userRepo.CountWithFilter(ctx, filter)
 }
 
-// Delete marks a user as deleted (soft delete)
+// Delete marks a user as deleted (soft delete) and invalidates all tokens
 func (s *userService) Delete(ctx context.Context, id uint) error {
+	// First invalidate all user tokens
+	if err := s.authService.InvalidateAllUserTokens(ctx, id); err != nil {
+		// Log the error but continue with deletion
+		fmt.Printf("Failed to invalidate tokens for user %d: %v\n", id, err)
+	}
+
+	// Then perform the soft delete
 	return s.userRepo.Delete(ctx, id)
+}
+
+// GenerateAuthToken generates an authentication token for a user
+func (s *userService) GenerateAuthToken(ctx context.Context, user *models.User) (string, time.Time, error) {
+	return s.authService.GenerateToken(ctx, user)
 }

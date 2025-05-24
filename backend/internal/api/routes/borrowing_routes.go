@@ -10,7 +10,7 @@ import (
 )
 
 // SetupBorrowingRoutes configures the routes for borrowing operations
-func SetupBorrowingRoutes(router fiber.Router, borrowingService service.BorrowingService, cfg *config.Config) {
+func SetupBorrowingRoutes(router fiber.Router, borrowingService service.BorrowingService, authService service.AuthService, cfg *config.Config) {
 	// Create handler
 	borrowingHandler := handlers.NewBorrowingHandler(borrowingService)
 
@@ -21,7 +21,7 @@ func SetupBorrowingRoutes(router fiber.Router, borrowingService service.Borrowin
 	borrowingRouter.Get("/stats", borrowingHandler.GetBorrowingStats)
 
 	// Protected routes (require authentication)
-	borrowingRouter.Use(middleware.Authentication(cfg))
+	borrowingRouter.Use(middleware.Authentication(cfg, authService))
 	borrowingRouter.Post("/borrow", borrowingHandler.Borrow)
 	borrowingRouter.Post("/repay", borrowingHandler.Repay)
 	borrowingRouter.Get("/balance", borrowingHandler.GetBorrowedAmount)

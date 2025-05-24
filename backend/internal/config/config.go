@@ -12,6 +12,7 @@ import (
 type Config struct {
 	App        AppConfig
 	Database   DatabaseConfig
+	Valkey     ValkeyConfig
 	Blockchain BlockchainConfig
 	JWT        JWTConfig
 	Server     ServerConfig
@@ -36,6 +37,14 @@ type DatabaseConfig struct {
 	TimeZone string
 }
 
+// ValkeyConfig holds Valkey connection information
+type ValkeyConfig struct {
+	Host     string
+	Port     string
+	Password string
+	DB       int
+}
+
 // BlockchainConfig holds blockchain connection information
 type BlockchainConfig struct {
 	RpcURL            string
@@ -49,7 +58,7 @@ type BlockchainConfig struct {
 // JWTConfig holds JWT configuration
 type JWTConfig struct {
 	Secret     string
-	ExpireTime int // In hours
+	ExpireTime int // In Minutes
 }
 
 // ServerConfig holds HTTP server configuration
@@ -77,6 +86,14 @@ func LoadConfig() (*Config, error) {
 		DBName:   GetEnv("DB_NAME", "lending_borrowing"),
 		SSLMode:  GetEnv("DB_SSLMODE", "disable"),
 		TimeZone: GetEnv("DB_TIMEZONE", "UTC"),
+	}
+
+	// Load Valkey configuration
+	valkeyConfig := ValkeyConfig{
+		Host:     GetEnv("VALKEY_HOST", "localhost"),
+		Port:     GetEnv("VALKEY_PORT", "6379"),
+		Password: GetEnv("VALKEY_PASSWORD", ""),
+		DB:       GetEnvInt("VALKEY_DB", 0),
 	}
 
 	// Load blockchain configuration
@@ -126,17 +143,18 @@ func LoadConfig() (*Config, error) {
 	config := &Config{
 		App:        appConfig,
 		Database:   dbConfig,
+		Valkey:     valkeyConfig,
 		Blockchain: blockchainConfig,
 		JWT:        jwtConfig,
 		Server:     serverConfig,
 	}
 
 	// Validate configuration
-    if err := config.Validate(); err != nil {
-        return nil, err
-    }
-    
-    return config, nil
+	if err := config.Validate(); err != nil {
+		return nil, err
+	}
+
+	return config, nil
 }
 
 func (c *Config) Validate() error {
