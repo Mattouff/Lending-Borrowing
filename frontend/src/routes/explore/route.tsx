@@ -1,4 +1,3 @@
-import { AppSidebar } from '@/components/layout/app-sidebar';
 import { TopHeader } from '@/components/layout/top-header';
 import SkipToMain from '@/components/skip-to-main';
 import { MARGIN_TOP, SidebarProvider } from '@/components/ui/sidebar';
@@ -18,7 +17,6 @@ function RouteComponent() {
       <TopHeader />
       <SidebarProvider defaultOpen={defaultOpen}>
         <SkipToMain />
-        <AppSidebar />
         <div
           id="content"
           className={cn(

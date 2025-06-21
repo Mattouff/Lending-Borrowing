@@ -1,5 +1,4 @@
 import { Separator } from '@/components/ui/separator';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import React from 'react';
 
@@ -11,6 +10,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { LinksDefinition } from '@/lib/links';
+import { IconCube } from '@tabler/icons-react';
 import { Link } from '@tanstack/react-router';
 
 interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
@@ -49,19 +49,18 @@ export const Header = ({
   return (
     <div
       className={cn(
-        'flex h-16 items-center gap-3 p-4 sm:gap-4',
-        fixed && 'header-fixed peer/header fixed z-50 w-[inherit]',
+        'flex h-16 items-center gap-3 p-4 sm:gap-4 px-6',
         offset > 10 && fixed ? '' : 'shadow-none',
         className
       )}
       {...props}
     >
-      <SidebarTrigger variant="outline" className="scale-125 sm:scale-100" />
+      <IconCube className="scale-125 sm:scale-100 animate-pulse transition-800" />
       <Separator orientation="vertical" className="h-6" />
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink>Dapp</BreadcrumbLink>
+            <BreadcrumbLink>Magnum</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>

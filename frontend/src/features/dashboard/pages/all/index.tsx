@@ -1,31 +1,14 @@
 'use client';
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from '@/components/ui/chart';
-import { TrendingUp } from 'lucide-react';
-import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
-
-// 📌 Import des composants Table de shadcn/ui
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { MarketOverview } from '@/components/market/market-overview';
+import { ProtocolStats } from '@/components/protocol/protocol-stats';
+import { ConnectWalletButton } from '@/components/simplekit/simplekit';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChartConfig } from '@/components/ui/chart';
+import { UserDashboard } from '@/components/user/user-dashboard';
+import { useFormattedContractData } from '@/hooks/use-formatted-contract-data';
+import { useMarketData } from '@/hooks/use-market-data';
+import { Loader2 } from 'lucide-react';
 
 const chartData = [
   { month: 'January', desktop: 186, mobile: 80 },
@@ -47,119 +30,155 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-// Données pour le tableau
-const tableData = [
-  { id: 1, name: 'Alice', role: 'Developer', status: 'Active' },
-  { id: 2, name: 'Bob', role: 'Designer', status: 'Pending' },
-  { id: 3, name: 'Charlie', role: 'Manager', status: 'Inactive' },
-  { id: 4, name: 'David', role: 'Engineer', status: 'Active' },
-];
-
 export default function Global() {
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Première Card (Graphique) */}
-      <Card className="col-span-1 lg:col-span-1">
-        <CardHeader>
-          <CardTitle>Area Chart - Stacked</CardTitle>
-          <CardDescription>
-            Showing total visitors for the last 6 months
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ChartContainer config={chartConfig}>
-            <AreaChart
-              accessibilityLayer
-              data={chartData}
-              margin={{ left: 12, right: 12 }}
-            >
-              <CartesianGrid vertical={false} />
-              <XAxis
-                dataKey="month"
-                tickLine={false}
-                axisLine={false}
-                tickMargin={8}
-                tickFormatter={(value) => value.slice(0, 3)}
-              />
-              <ChartTooltip
-                cursor={false}
-                content={<ChartTooltipContent indicator="dot" />}
-              />
-              <Area
-                dataKey="mobile"
-                type="natural"
-                fill="var(--color-mobile)"
-                fillOpacity={0.4}
-                stroke="var(--color-mobile)"
-                stackId="a"
-              />
-              <Area
-                dataKey="desktop"
-                type="natural"
-                fill="var(--color-desktop)"
-                fillOpacity={0.4}
-                stroke="var(--color-desktop)"
-                stackId="a"
-              />
-            </AreaChart>
-          </ChartContainer>
-        </CardContent>
-        <CardFooter>
-          <div className="flex w-full items-start gap-2 text-sm">
-            <div className="grid gap-2">
-              <div className="flex items-center gap-2 font-medium leading-none">
-                Trending up by 5.2% this month{' '}
-                <TrendingUp className="h-4 w-4" />
-              </div>
-              <div className="flex items-center gap-2 leading-none text-muted-foreground">
-                January - June 2024
-              </div>
-            </div>
-          </div>
-        </CardFooter>
-      </Card>
+  const {
+    formatted,
+    isLoading: contractLoading,
+    isError,
+    error,
+  } = useFormattedContractData();
 
-      {/* Tableau à côté des graphes */}
-      <Card className="col-span-1 lg:col-span-2">
-        <CardHeader>
-          <CardTitle>User Data</CardTitle>
-          <CardDescription>
-            List of registered users and their status.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tableData.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>{user.id}</TableCell>
-                  <TableCell>{user.name}</TableCell>
-                  <TableCell>{user.role}</TableCell>
-                  <TableCell
-                    className={
-                      user.status === 'Active'
-                        ? 'text-green-600'
-                        : user.status === 'Pending'
-                          ? 'text-yellow-600'
-                          : 'text-red-600'
-                    }
-                  >
-                    {user.status}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+  const {
+    marketOverview,
+    lendingPool,
+    borrowingStats,
+    lendingBalance,
+    borrowingBalance,
+    collateralBalance,
+    isAuthenticated,
+    isLoadingAPI,
+  } = useMarketData();
+
+  if (isError) {
+    console.error('Contract data error:', error);
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Cards de statistiques en haut */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total Supply Token
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {contractLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                `${formatted.token.totalSupply} ${formatted.token.symbol}`
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Lending</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {contractLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                `${formatted.lendingPool.totalLending} ${formatted.token.symbol}`
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Interest Rate: {formatted.lendingPool.interestRate}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total Borrowed
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {contractLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                `${formatted.borrowing.totalBorrowed} ${formatted.token.symbol}`
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Current Rate: {formatted.borrowing.currentRate}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Collateral Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {contractLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                formatted.collateral.liquidationThreshold
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Liquidation Threshold
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+      <div className=" p-4 space-y-6">
+        {/* Market Overview Section */}
+        <MarketOverview
+          marketData={marketOverview}
+          lendingPool={lendingPool}
+          borrowingStats={borrowingStats}
+          contractData={formatted}
+          isLoading={isLoadingAPI || contractLoading}
+        />
+
+        {/* User Dashboard Section */}
+        {isAuthenticated ? (
+          <UserDashboard
+            lendingBalance={lendingBalance}
+            borrowingBalance={borrowingBalance}
+            collateralBalance={collateralBalance}
+            isLoading={isLoadingAPI}
+          />
+        ) : (
+          <div className="text-center py-12">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-800 mb-4">
+              <svg
+                className="w-8 h-8 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Connect Your Wallet</h3>
+            <p className="text-gray-400 mb-6">
+              Connect your wallet to access lending, borrowing, and trading
+              features
+            </p>
+            <ConnectWalletButton autoAuth={true} />
+          </div>
+        )}
+
+        {/* Protocol Stats Section */}
+        <ProtocolStats contractData={formatted} isLoading={contractLoading} />
+      </div>
     </div>
   );
 }

@@ -34,9 +34,9 @@ export function TopHeader() {
           : 'Chargement...';
 
   return (
-    <Card className="fixed top-0 left-0 z-50 shadow-sm rounded-md bg-sidebar text-sidebar-foreground mt-3 ml-3 w-[calc(100%-1.5rem)]">
+    <Card className="relative top-0 left-0 z-50 shadow-sm rounded-md bg-sidebar text-sidebar-foreground mt-3 ml-3 w-[calc(100%-1.5rem)]">
       <CardContent className="flex items-center justify-between h-[var(--header-height)]">
-        <h1 className="truncate font-semibold text-2xl">Dapp</h1>
+        <h1 className="truncate font-semibold text-2xl">Magnum</h1>
         <div className="flex gap-3 items-center">
           {networkName && address ? (
             <p className="text-sm pr-2">{networkName}</p>
