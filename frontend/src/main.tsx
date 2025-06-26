@@ -1,12 +1,10 @@
+import { toast } from '@/hooks/use-toast';
+import { handleServerError } from '@/utils/handle-server-error';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { AxiosError } from 'axios';
 import { StrictMode } from 'react';
 import ReactDOM from 'react-dom/client';
-
-// Import the generated route tree
-import { toast } from '@/hooks/use-toast';
-import { handleServerError } from '@/utils/handle-server-error';
 import { WagmiProvider } from 'wagmi';
 import { SimpleKitProvider } from './components/simplekit/simplekit';
 import { config } from './config/config';
@@ -19,7 +17,6 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: (failureCount, error) => {
-        // eslint-disable-next-line no-console
         if (import.meta.env.DEV) console.log({ failureCount, error });
 
         if (failureCount >= 0 && import.meta.env.DEV) return false;
