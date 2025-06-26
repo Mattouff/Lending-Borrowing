@@ -10,12 +10,17 @@ import (
 
 // LendingService defines the interface for lending business logic
 type LendingService interface {
-	// Deposit allows users to deposit tokens into the lending pool
-	Deposit(ctx context.Context, userAddress common.Address, amount *big.Int) (string, error)
+	// Wallet-based transaction methods
+	// PrepareDeposit prepares the contract interaction data for a deposit transaction
+	PrepareDeposit(ctx context.Context, userAddress common.Address, amount *big.Int) (*ContractInteractionData, error)
 
-	// Withdraw allows users to withdraw tokens from the lending pool
-	Withdraw(ctx context.Context, userAddress common.Address, amount *big.Int) (string, error)
+	// PrepareWithdraw prepares the contract interaction data for a withdraw transaction
+	PrepareWithdraw(ctx context.Context, userAddress common.Address, amount *big.Int) (*ContractInteractionData, error)
 
+	// ProcessWalletTransaction validates and processes a wallet-signed transaction
+	ProcessWalletTransaction(ctx context.Context, txHash string, userAddress common.Address, txType models.TransactionType, amount *big.Int) (*models.Transaction, error)
+
+	// Read-only methods
 	// GetUserBalance returns the user's balance in the lending pool
 	GetUserBalance(ctx context.Context, userAddress common.Address) (*big.Int, error)
 

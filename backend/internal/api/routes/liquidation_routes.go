@@ -4,13 +4,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	"github.com/Mattouff/Lending-Borrowing/internal/api/handlers"
-	"github.com/Mattouff/Lending-Borrowing/internal/api/middleware"
-	"github.com/Mattouff/Lending-Borrowing/internal/config"
 	"github.com/Mattouff/Lending-Borrowing/internal/domain/service"
 )
 
 // SetupLiquidationRoutes configures the routes for liquidation operations
-func SetupLiquidationRoutes(router fiber.Router, liquidationService service.LiquidationService, authService service.AuthService, cfg *config.Config) {
+func SetupLiquidationRoutes(router fiber.Router, liquidationService service.LiquidationService) {
 	// Create handler
 	liquidationHandler := handlers.NewLiquidationHandler(liquidationService)
 
@@ -22,7 +20,6 @@ func SetupLiquidationRoutes(router fiber.Router, liquidationService service.Liqu
 	liquidationRouter.Get("/history", liquidationHandler.GetLiquidationHistory)
 	liquidationRouter.Get("/bonus", liquidationHandler.GetLiquidationBonus)
 
-	// Protected routes (require authentication)
-	liquidationRouter.Use(middleware.Authentication(cfg, authService))
-	liquidationRouter.Post("/liquidate", liquidationHandler.Liquidate)
+	// Protected routes (require authentication) - removed liquidate endpoint
+	// Liquidators can interact directly with smart contracts for true decentralization
 }

@@ -24,6 +24,7 @@ func SetupLendingRoutes(router fiber.Router, lendingService service.LendingServi
 	lendingRouter.Use(middleware.Authentication(cfg, authService))
 	lendingRouter.Post("/deposit", lendingHandler.Deposit)
 	lendingRouter.Post("/withdraw", lendingHandler.Withdraw)
+	lendingRouter.Post("/submit-transaction", lendingHandler.SubmitTransaction) // New wallet transaction endpoint
 	lendingRouter.Get("/balance", lendingHandler.GetLendingBalance)
 	lendingRouter.Get("/info", lendingHandler.GetLendingInfo)
 	lendingRouter.Get("/transactions", lendingHandler.GetTransactionHistory)

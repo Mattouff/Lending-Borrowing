@@ -1,10 +1,8 @@
 package handlers
 
 import (
-	"math/big"
 	"strconv"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/gofiber/fiber/v2"
 
 	"github.com/Mattouff/Lending-Borrowing/internal/api/dto"
@@ -23,58 +21,8 @@ func NewLiquidationHandler(liquidationService service.LiquidationService) *Liqui
 	}
 }
 
-// Liquidate godoc
-// @Summary Liquidate under-collateralized position
-// @Description Liquidate a position that has fallen below minimum health factor
-// @Tags liquidation
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param request body dto.TransactionLiquidationRequest true "Liquidation parameters"
-// @Success 200 {object} dto.APIResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 401 {object} dto.ErrorResponse
-// @Failure 500 {object} dto.ErrorResponse
-// @Router /liquidation/liquidate [post]
-func (h *LiquidationHandler) Liquidate(c *fiber.Ctx) error {
-	// Extract the liquidator address from the authentication middleware
-	liquidatorAddress, ok := c.Locals("address").(string)
-	if !ok {
-		return fiber.NewError(fiber.StatusUnauthorized, "User not authenticated")
-	}
-
-	// Parse the request body
-	var req dto.TransactionLiquidationRequest
-	if err := c.BodyParser(&req); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
-	}
-
-	// Convert the amount from string to *big.Int
-	amount, success := new(big.Int).SetString(req.Amount, 10)
-	if !success {
-		return fiber.NewError(fiber.StatusBadRequest, "Invalid amount format")
-	}
-
-	// Call the liquidation service to liquidate the position
-	txHash, err := h.liquidationService.Liquidate(
-		c.Context(),
-		common.HexToAddress(liquidatorAddress),
-		common.HexToAddress(req.BorrowerAddress),
-		amount,
-	)
-	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "Failed to process liquidation: "+err.Error())
-	}
-
-	// Return the transaction hash
-	return c.Status(fiber.StatusOK).JSON(dto.APIResponse{
-		Success: true,
-		Message: "Liquidation transaction submitted",
-		Data: fiber.Map{
-			"transactionHash": txHash,
-		},
-	})
-}
+// Note: The liquidate endpoint has been removed as liquidators can interact directly with smart contracts
+// This promotes true decentralization and allows liquidators to use their own tools and strategies
 
 // GetLiquidatablePositions godoc
 // @Summary Get liquidatable positions

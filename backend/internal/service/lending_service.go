@@ -5,7 +5,6 @@ import (
 	"errors"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/Mattouff/Lending-Borrowing/internal/domain/models"
@@ -36,98 +35,6 @@ func NewLendingService(
 		userRepo:        userRepo,
 		lendingPool:     lendingPool,
 	}, nil
-}
-
-// Deposit allows users to deposit tokens into the lending pool
-func (s *lendingService) Deposit(ctx context.Context, userAddress common.Address, amount *big.Int) (string, error) {
-	// Check if amount is valid
-	if amount.Cmp(big.NewInt(0)) <= 0 {
-		return "", errors.New("deposit amount must be greater than 0")
-	}
-
-	// Get auth for transaction
-	auth, err := getTransactOpts(ctx, userAddress)
-	if err != nil {
-		return "", err
-	}
-
-	// Execute the deposit transaction
-	tx, err := s.lendingPool.Deposit(auth, amount)
-	if err != nil {
-		return "", err
-	}
-
-	// Store transaction in database
-	user, err := s.userRepo.FindByAddress(ctx, userAddress.Hex())
-	if err != nil {
-		return "", err
-	}
-
-	transaction := &models.Transaction{
-		UserID:       user.ID,
-		Type:         models.TransactionDeposit,
-		Status:       models.StatusPending,
-		Hash:         tx.Hash().Hex(),
-		Amount:       amount.String(),
-		TokenAddress: s.lendingPool.ContractAddress().Hex(),
-	}
-
-	if err := s.transactionRepo.Create(ctx, transaction); err != nil {
-		return "", err
-	}
-
-	return tx.Hash().Hex(), nil
-}
-
-// Withdraw allows users to withdraw tokens from the lending pool
-func (s *lendingService) Withdraw(ctx context.Context, userAddress common.Address, amount *big.Int) (string, error) {
-	// Check if amount is valid
-	if amount.Cmp(big.NewInt(0)) <= 0 {
-		return "", errors.New("withdrawal amount must be greater than 0")
-	}
-
-	// Check if user has enough balance
-	balance, err := s.GetUserBalance(ctx, userAddress)
-	if err != nil {
-		return "", err
-	}
-
-	if balance.Cmp(amount) < 0 {
-		return "", errors.New("insufficient balance for withdrawal")
-	}
-
-	// Get auth for transaction
-	auth, err := getTransactOpts(ctx, userAddress)
-	if err != nil {
-		return "", err
-	}
-
-	// Execute the withdraw transaction
-	tx, err := s.lendingPool.Withdraw(auth, amount)
-	if err != nil {
-		return "", err
-	}
-
-	// Store transaction in database
-	user, err := s.userRepo.FindByAddress(ctx, userAddress.Hex())
-	if err != nil {
-		return "", err
-	}
-
-	transaction := &models.Transaction{
-		UserID:       user.ID,
-		Type:         models.TransactionWithdraw,
-		Status:       models.StatusPending,
-		Hash:         tx.Hash().Hex(),
-		Amount:       amount.String(),
-		TokenAddress: s.lendingPool.ContractAddress().Hex(),
-	}
-
-	if err := s.transactionRepo.Create(ctx, transaction); err != nil {
-		return "", err
-	}
-
-	return tx.Hash().Hex(), nil
 }
 
 // GetUserBalance returns the user's balance in the lending pool
@@ -169,11 +76,89 @@ func (s *lendingService) GetUserTransactionHistory(ctx context.Context, userAddr
 	return s.transactionRepo.List(ctx, filter, offset, limit)
 }
 
-// Helper function to get transaction options for a user
-func getTransactOpts(ctx context.Context, userAddress common.Address) (*bind.TransactOpts, error) {
-	// In a real implementation, this would use the user's private key or a signing service
-	// This is just a placeholder
-	return nil, errors.New("transaction signing not implemented")
+// PrepareDeposit prepares the contract interaction data for a deposit transaction
+func (s *lendingService) PrepareDeposit(ctx context.Context, userAddress common.Address, amount *big.Int) (*service.ContractInteractionData, error) {
+	// Check if amount is valid
+	if amount.Cmp(big.NewInt(0)) <= 0 {
+		return nil, errors.New("deposit amount must be greater than 0")
+	}
+
+	// Create contract interaction data
+	contractData := &service.ContractInteractionData{
+		ContractAddress: s.lendingPool.ContractAddress().Hex(),
+		MethodName:      "deposit",
+		Parameters:      []interface{}{amount},
+		Value:           "0", // No ETH value needed for ERC20 deposits
+	}
+
+	return contractData, nil
+}
+
+// PrepareWithdraw prepares the contract interaction data for a withdraw transaction
+func (s *lendingService) PrepareWithdraw(ctx context.Context, userAddress common.Address, amount *big.Int) (*service.ContractInteractionData, error) {
+	// Check if amount is valid
+	if amount.Cmp(big.NewInt(0)) <= 0 {
+		return nil, errors.New("withdrawal amount must be greater than 0")
+	}
+
+	// Check if user has enough balance
+	balance, err := s.GetUserBalance(ctx, userAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	if balance.Cmp(amount) < 0 {
+		return nil, errors.New("insufficient balance for withdrawal")
+	}
+
+	// Create contract interaction data
+	contractData := &service.ContractInteractionData{
+		ContractAddress: s.lendingPool.ContractAddress().Hex(),
+		MethodName:      "withdraw",
+		Parameters:      []interface{}{amount},
+		Value:           "0",
+	}
+
+	return contractData, nil
+}
+
+// ProcessWalletTransaction validates and processes a wallet-signed transaction
+func (s *lendingService) ProcessWalletTransaction(ctx context.Context, txHash string, userAddress common.Address, txType models.TransactionType, amount *big.Int) (*models.Transaction, error) {
+	// Find the user
+	user, err := s.userRepo.FindByAddress(ctx, userAddress.Hex())
+	if err != nil {
+		return nil, err
+	}
+
+	if user == nil {
+		return nil, errors.New("user not found")
+	}
+
+	// Check if transaction already exists
+	existingTx, err := s.transactionRepo.FindByHash(ctx, txHash)
+	if err != nil {
+		return nil, err
+	}
+
+	if existingTx != nil {
+		return existingTx, nil // Transaction already exists
+	}
+
+	// Create new transaction record
+	transaction := &models.Transaction{
+		UserID:       user.ID,
+		Type:         txType,
+		Status:       models.StatusPending,
+		Hash:         txHash,
+		Amount:       amount.String(),
+		TokenAddress: s.lendingPool.ContractAddress().Hex(),
+	}
+
+	if err := s.transactionRepo.Create(ctx, transaction); err != nil {
+		return nil, err
+	}
+
+	return transaction, nil
 }
 
 // CountUserTransactions counts the number of transactions for a user with optional filtering

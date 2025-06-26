@@ -5,14 +5,10 @@ import (
 	"math/big"
 
 	"github.com/Mattouff/Lending-Borrowing/internal/domain/models"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 // LiquidationService defines the interface for liquidation business logic
 type LiquidationService interface {
-	// Liquidate allows liquidators to liquidate an under-collateralized position
-	Liquidate(ctx context.Context, liquidatorAddress, borrowerAddress common.Address, repayAmount *big.Int) (string, error)
-
 	// GetLiquidatablePositions returns all positions that can be liquidated
 	GetLiquidatablePositions(ctx context.Context) ([]*models.Position, error)
 

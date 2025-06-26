@@ -9,12 +9,6 @@ import (
 
 // CollateralService defines the interface for collateral business logic
 type CollateralService interface {
-	// DepositCollateral allows users to deposit tokens as collateral
-	DepositCollateral(ctx context.Context, userAddress common.Address, amount *big.Int) (string, error)
-
-	// WithdrawCollateral allows users to withdraw tokens from their collateral
-	WithdrawCollateral(ctx context.Context, userAddress common.Address, amount *big.Int) (string, error)
-
 	// GetCollateralBalance returns the collateral balance of a user
 	GetCollateralBalance(ctx context.Context, userAddress common.Address) (*big.Int, error)
 

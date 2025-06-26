@@ -25,8 +25,8 @@ func NewBorrowingHandler(borrowingService service.BorrowingService) *BorrowingHa
 }
 
 // Borrow godoc
-// @Summary Borrow tokens against collateral
-// @Description Borrow tokens against deposited collateral
+// @Summary Prepare borrow transaction for wallet signing
+// @Description Prepare a borrow transaction that can be signed by the user's wallet
 // @Tags borrowing
 // @Accept json
 // @Produce json
@@ -56,25 +56,22 @@ func (h *BorrowingHandler) Borrow(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "Invalid amount format")
 	}
 
-	// Call the borrowing service to process the borrow request
-	txHash, err := h.borrowingService.Borrow(c.Context(), common.HexToAddress(address), amount)
+	// Prepare transaction data for wallet signing
+	contractData, err := h.borrowingService.PrepareBorrow(c.Context(), common.HexToAddress(address), amount)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "Failed to process borrowing: "+err.Error())
+		return fiber.NewError(fiber.StatusInternalServerError, "Failed to prepare borrow: "+err.Error())
 	}
 
-	// Return the transaction hash
 	return c.Status(fiber.StatusOK).JSON(dto.APIResponse{
 		Success: true,
-		Message: "Borrow transaction submitted",
-		Data: fiber.Map{
-			"transactionHash": txHash,
-		},
+		Message: "Borrow transaction prepared",
+		Data:    contractData,
 	})
 }
 
 // Repay godoc
-// @Summary Repay borrowed tokens
-// @Description Repay tokens previously borrowed from the protocol
+// @Summary Prepare repay transaction for wallet signing
+// @Description Prepare a repay transaction that can be signed by the user's wallet
 // @Tags borrowing
 // @Accept json
 // @Produce json
@@ -104,19 +101,16 @@ func (h *BorrowingHandler) Repay(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "Invalid amount format")
 	}
 
-	// Call the borrowing service to process the repay request
-	txHash, err := h.borrowingService.Repay(c.Context(), common.HexToAddress(address), amount)
+	// Prepare transaction data for wallet signing
+	contractData, err := h.borrowingService.PrepareRepay(c.Context(), common.HexToAddress(address), amount)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "Failed to process repayment: "+err.Error())
+		return fiber.NewError(fiber.StatusInternalServerError, "Failed to prepare repay: "+err.Error())
 	}
 
-	// Return the transaction hash
 	return c.Status(fiber.StatusOK).JSON(dto.APIResponse{
 		Success: true,
-		Message: "Repay transaction submitted",
-		Data: fiber.Map{
-			"transactionHash": txHash,
-		},
+		Message: "Repay transaction prepared",
+		Data:    contractData,
 	})
 }
 
@@ -315,5 +309,80 @@ func (h *BorrowingHandler) GetBorrowingStats(c *fiber.Ctx) error {
 			"totalBorrowed": totalBorrowed.String(),
 			"interestRate":  interestRate.String(),
 		},
+	})
+}
+
+// SubmitTransaction godoc
+// @Summary Submit wallet-signed transaction
+// @Description Submit a wallet-signed transaction for processing
+// @Tags borrowing
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.WalletTransactionRequest true "Wallet transaction details"
+// @Success 200 {object} dto.APIResponse{data=dto.WalletTransactionResponse}
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /borrowing/submit-transaction [post]
+func (h *BorrowingHandler) SubmitTransaction(c *fiber.Ctx) error {
+	// Extract the user address from the authentication middleware
+	userAddress, ok := c.Locals("address").(string)
+	if !ok {
+		return fiber.NewError(fiber.StatusUnauthorized, "User not authenticated")
+	}
+
+	// Parse the request body
+	var req dto.WalletTransactionRequest
+	if err := c.BodyParser(&req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
+	}
+
+	// Validate that the user addresses match
+	if req.UserAddress != userAddress {
+		return fiber.NewError(fiber.StatusBadRequest, "User address mismatch")
+	}
+
+	// Convert the amount from string to *big.Int
+	amount, success := new(big.Int).SetString(req.Amount, 10)
+	if !success {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid amount format")
+	}
+
+	// Convert DTO transaction type to model transaction type
+	var txType models.TransactionType
+	switch req.Type {
+	case dto.TransactionTypeBorrow:
+		txType = models.TransactionBorrow
+	case dto.TransactionTypeRepay:
+		txType = models.TransactionRepay
+	default:
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid transaction type for borrowing operations")
+	}
+
+	// Process the wallet transaction
+	transaction, err := h.borrowingService.ProcessWalletTransaction(
+		c.Context(),
+		req.TransactionHash,
+		common.HexToAddress(userAddress),
+		txType,
+		amount,
+	)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "Failed to process transaction: "+err.Error())
+	}
+
+	response := dto.WalletTransactionResponse{
+		TransactionID:   transaction.ID,
+		TransactionHash: transaction.Hash,
+		Status:          string(transaction.Status),
+		Message:         "Transaction submitted successfully",
+	}
+
+	return c.Status(fiber.StatusOK).JSON(dto.APIResponse{
+		Success: true,
+		Message: "Transaction processed successfully",
+		Data:    response,
 	})
 }

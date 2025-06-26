@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"math/big"
-
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gofiber/fiber/v2"
 
@@ -22,101 +20,9 @@ func NewCollateralHandler(collateralService service.CollateralService) *Collater
 	}
 }
 
-// DepositCollateral godoc
-// @Summary Deposit collateral
-// @Description Deposit tokens as collateral to enable borrowing
-// @Tags collateral
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param request body dto.TransactionRequest true "Collateral amount to deposit"
-// @Success 200 {object} dto.APIResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 401 {object} dto.ErrorResponse
-// @Failure 500 {object} dto.ErrorResponse
-// @Router /collateral/deposit [post]
-func (h *CollateralHandler) DepositCollateral(c *fiber.Ctx) error {
-	// Extract the user address from the authentication middleware
-	address, ok := c.Locals("address").(string)
-	if !ok {
-		return fiber.NewError(fiber.StatusUnauthorized, "User not authenticated")
-	}
-
-	// Parse the request body
-	var req dto.TransactionRequest
-	if err := c.BodyParser(&req); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
-	}
-
-	// Convert the amount from string to *big.Int
-	amount, success := new(big.Int).SetString(req.Amount, 10)
-	if !success {
-		return fiber.NewError(fiber.StatusBadRequest, "Invalid amount format")
-	}
-
-	// Call the collateral service to deposit collateral
-	txHash, err := h.collateralService.DepositCollateral(c.Context(), common.HexToAddress(address), amount)
-	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "Failed to deposit collateral: "+err.Error())
-	}
-
-	// Return the transaction hash
-	return c.Status(fiber.StatusOK).JSON(dto.APIResponse{
-		Success: true,
-		Message: "Collateral deposit transaction submitted",
-		Data: fiber.Map{
-			"transactionHash": txHash,
-		},
-	})
-}
-
-// WithdrawCollateral godoc
-// @Summary Withdraw collateral
-// @Description Withdraw deposited collateral if borrowing health factor permits
-// @Tags collateral
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param request body dto.TransactionRequest true "Collateral amount to withdraw"
-// @Success 200 {object} dto.APIResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 401 {object} dto.ErrorResponse
-// @Failure 500 {object} dto.ErrorResponse
-// @Router /collateral/withdraw [post]
-func (h *CollateralHandler) WithdrawCollateral(c *fiber.Ctx) error {
-	// Extract the user address from the authentication middleware
-	address, ok := c.Locals("address").(string)
-	if !ok {
-		return fiber.NewError(fiber.StatusUnauthorized, "User not authenticated")
-	}
-
-	// Parse the request body
-	var req dto.TransactionRequest
-	if err := c.BodyParser(&req); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
-	}
-
-	// Convert the amount from string to *big.Int
-	amount, success := new(big.Int).SetString(req.Amount, 10)
-	if !success {
-		return fiber.NewError(fiber.StatusBadRequest, "Invalid amount format")
-	}
-
-	// Call the collateral service to withdraw collateral
-	txHash, err := h.collateralService.WithdrawCollateral(c.Context(), common.HexToAddress(address), amount)
-	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "Failed to withdraw collateral: "+err.Error())
-	}
-
-	// Return the transaction hash
-	return c.Status(fiber.StatusOK).JSON(dto.APIResponse{
-		Success: true,
-		Message: "Collateral withdrawal transaction submitted",
-		Data: fiber.Map{
-			"transactionHash": txHash,
-		},
-	})
-}
+// Note: Collateral deposit and withdrawal methods have been removed.
+// Users should interact directly with the collateral contract using their wallets
+// for true decentralization. The backend now only provides read-only information.
 
 // GetCollateralBalance godoc
 // @Summary Get collateral balance

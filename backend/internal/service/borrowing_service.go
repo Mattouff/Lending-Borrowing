@@ -43,191 +43,6 @@ func NewBorrowingService(
 	}, nil
 }
 
-// Borrow allows users to borrow tokens based on their collateral
-func (s *borrowingService) Borrow(ctx context.Context, userAddress common.Address, amount *big.Int) (string, error) {
-	// Check if amount is valid
-	if amount.Cmp(big.NewInt(0)) <= 0 {
-		return "", errors.New("borrow amount must be greater than 0")
-	}
-
-	// Check if user can borrow the requested amount
-	maxBorrowable, err := s.collateralService.GetMaxBorrowableAmount(ctx, userAddress)
-	if err != nil {
-		return "", err
-	}
-
-	if maxBorrowable.Cmp(amount) < 0 {
-		return "", errors.New("borrow amount exceeds maximum borrowable amount")
-	}
-
-	// Get auth for transaction
-	auth, err := getTransactOpts(ctx, userAddress)
-	if err != nil {
-		return "", err
-	}
-
-	// Execute the borrow transaction
-	tx, err := s.borrowing.Borrow(auth, amount)
-	if err != nil {
-		return "", err
-	}
-
-	// Store transaction in database
-	user, err := s.userRepo.FindByAddress(ctx, userAddress.Hex())
-	if err != nil {
-		return "", err
-	}
-
-	transaction := &models.Transaction{
-		UserID:       user.ID,
-		Type:         models.TransactionBorrow,
-		Status:       models.StatusPending,
-		Hash:         tx.Hash().Hex(),
-		Amount:       amount.String(),
-		TokenAddress: s.borrowing.ContractAddress().Hex(),
-	}
-
-	if err := s.transactionRepo.Create(ctx, transaction); err != nil {
-		return "", err
-	}
-
-	// Update or create position
-	positions, err := s.positionRepo.FindActiveByUserID(ctx, user.ID)
-	if err != nil {
-		return "", err
-	}
-
-	// Get collateral balance
-	collateralBalance, err := s.collateralService.GetCollateralBalance(ctx, userAddress)
-	if err != nil {
-		return "", err
-	}
-
-	// Get token address for underlying collateral
-	serviceFactory := services.GetInstance()
-	collateralService, err := serviceFactory.GetCollateralService()
-	if err != nil {
-		return "", err
-	}
-
-	if len(positions) == 0 {
-		// Create new position
-		position := &models.Position{
-			UserID:           user.ID,
-			CollateralAmount: collateralBalance.String(),
-			CollateralToken:  collateralService.ContractAddress().Hex(),
-			BorrowedAmount:   amount.String(),
-			BorrowedToken:    s.borrowing.ContractAddress().Hex(),
-			InterestRate:     "0", // Will be updated later
-			Status:           models.StatusActive,
-			HealthFactor:     "0", // Will be updated later
-		}
-
-		if err := s.positionRepo.Create(ctx, position); err != nil {
-			return "", err
-		}
-	} else {
-		// Update existing position
-		position := positions[0]
-
-		// Add new borrowed amount to existing
-		currentBorrowed, success := new(big.Int).SetString(position.BorrowedAmount, 10)
-		if !success {
-			return "", errors.New("failed to parse borrowed amount")
-		}
-
-		newBorrowedAmount := new(big.Int).Add(currentBorrowed, amount)
-		position.BorrowedAmount = newBorrowedAmount.String()
-		position.CollateralAmount = collateralBalance.String()
-
-		if err := s.positionRepo.Update(ctx, position); err != nil {
-			return "", err
-		}
-	}
-
-	return tx.Hash().Hex(), nil
-}
-
-// Repay allows users to repay borrowed tokens
-func (s *borrowingService) Repay(ctx context.Context, userAddress common.Address, amount *big.Int) (string, error) {
-	// Check if amount is valid
-	if amount.Cmp(big.NewInt(0)) <= 0 {
-		return "", errors.New("repay amount must be greater than 0")
-	}
-
-	// Get current borrowed amount
-	borrowed, err := s.GetBorrowedAmount(ctx, userAddress)
-	if err != nil {
-		return "", err
-	}
-
-	// Check if repay amount is valid
-	if borrowed.Cmp(amount) < 0 {
-		return "", errors.New("repay amount exceeds borrowed amount")
-	}
-
-	// Get auth for transaction
-	auth, err := getTransactOpts(ctx, userAddress)
-	if err != nil {
-		return "", err
-	}
-
-	// Execute the repay transaction
-	tx, err := s.borrowing.Repay(auth, amount)
-	if err != nil {
-		return "", err
-	}
-
-	// Store transaction in database
-	user, err := s.userRepo.FindByAddress(ctx, userAddress.Hex())
-	if err != nil {
-		return "", err
-	}
-
-	transaction := &models.Transaction{
-		UserID:       user.ID,
-		Type:         models.TransactionRepay,
-		Status:       models.StatusPending,
-		Hash:         tx.Hash().Hex(),
-		Amount:       amount.String(),
-		TokenAddress: s.borrowing.ContractAddress().Hex(),
-	}
-
-	if err := s.transactionRepo.Create(ctx, transaction); err != nil {
-		return "", err
-	}
-
-	// Update position
-	positions, err := s.positionRepo.FindActiveByUserID(ctx, user.ID)
-	if err != nil {
-		return "", err
-	}
-
-	if len(positions) > 0 {
-		position := positions[0]
-
-		// Subtract repaid amount from borrowed
-		currentBorrowed, success := new(big.Int).SetString(position.BorrowedAmount, 10)
-		if !success {
-			return "", errors.New("failed to parse borrowed amount")
-		}
-
-		newBorrowedAmount := new(big.Int).Sub(currentBorrowed, amount)
-		position.BorrowedAmount = newBorrowedAmount.String()
-
-		// If borrowed amount is 0, close the position
-		if newBorrowedAmount.Cmp(big.NewInt(0)) == 0 {
-			position.Status = models.StatusClosed
-		}
-
-		if err := s.positionRepo.Update(ctx, position); err != nil {
-			return "", err
-		}
-	}
-
-	return tx.Hash().Hex(), nil
-}
-
 // GetBorrowedAmount returns the amount borrowed by a user
 func (s *borrowingService) GetBorrowedAmount(ctx context.Context, userAddress common.Address) (*big.Int, error) {
 	return s.borrowing.GetBorrowToken(ctx, userAddress)
@@ -287,4 +102,199 @@ func (s *borrowingService) CountUserTransactions(ctx context.Context, address co
 
 	// Count the transactions
 	return s.transactionRepo.Count(ctx, filter)
+}
+
+// PrepareBorrow prepares the contract interaction data for a borrow transaction
+func (s *borrowingService) PrepareBorrow(ctx context.Context, userAddress common.Address, amount *big.Int) (*service.ContractInteractionData, error) {
+	// Check if amount is valid
+	if amount.Cmp(big.NewInt(0)) <= 0 {
+		return nil, errors.New("borrow amount must be greater than 0")
+	}
+
+	// Check if user can borrow the requested amount
+	maxBorrowable, err := s.collateralService.GetMaxBorrowableAmount(ctx, userAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	if maxBorrowable.Cmp(amount) < 0 {
+		return nil, errors.New("borrow amount exceeds maximum borrowable amount")
+	}
+
+	// Create contract interaction data
+	contractData := &service.ContractInteractionData{
+		ContractAddress: s.borrowing.ContractAddress().Hex(),
+		MethodName:      "borrow",
+		Parameters:      []interface{}{amount},
+		Value:           "0",
+	}
+
+	return contractData, nil
+}
+
+// PrepareRepay prepares the contract interaction data for a repay transaction
+func (s *borrowingService) PrepareRepay(ctx context.Context, userAddress common.Address, amount *big.Int) (*service.ContractInteractionData, error) {
+	// Check if amount is valid
+	if amount.Cmp(big.NewInt(0)) <= 0 {
+		return nil, errors.New("repay amount must be greater than 0")
+	}
+
+	// Get current borrowed amount
+	borrowed, err := s.GetBorrowedAmount(ctx, userAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if repay amount is valid
+	if borrowed.Cmp(amount) < 0 {
+		return nil, errors.New("repay amount exceeds borrowed amount")
+	}
+
+	// Create contract interaction data
+	contractData := &service.ContractInteractionData{
+		ContractAddress: s.borrowing.ContractAddress().Hex(),
+		MethodName:      "repay",
+		Parameters:      []interface{}{amount},
+		Value:           "0",
+	}
+
+	return contractData, nil
+}
+
+// ProcessWalletTransaction validates and processes a wallet-signed transaction
+func (s *borrowingService) ProcessWalletTransaction(ctx context.Context, txHash string, userAddress common.Address, txType models.TransactionType, amount *big.Int) (*models.Transaction, error) {
+	// Find the user
+	user, err := s.userRepo.FindByAddress(ctx, userAddress.Hex())
+	if err != nil {
+		return nil, err
+	}
+
+	if user == nil {
+		return nil, errors.New("user not found")
+	}
+
+	// Check if transaction already exists
+	existingTx, err := s.transactionRepo.FindByHash(ctx, txHash)
+	if err != nil {
+		return nil, err
+	}
+
+	if existingTx != nil {
+		return existingTx, nil // Transaction already exists
+	}
+
+	// Create new transaction record
+	transaction := &models.Transaction{
+		UserID:       user.ID,
+		Type:         txType,
+		Status:       models.StatusPending,
+		Hash:         txHash,
+		Amount:       amount.String(),
+		TokenAddress: s.borrowing.ContractAddress().Hex(),
+	}
+
+	if err := s.transactionRepo.Create(ctx, transaction); err != nil {
+		return nil, err
+	}
+
+	// Update position based on transaction type
+	switch txType {
+	case models.TransactionBorrow:
+		s.updatePositionAfterBorrow(ctx, user.ID, userAddress, amount)
+	case models.TransactionRepay:
+		s.updatePositionAfterRepay(ctx, user.ID, userAddress, amount)
+	}
+
+	return transaction, nil
+}
+
+// Helper method to update position after borrow
+func (s *borrowingService) updatePositionAfterBorrow(ctx context.Context, userID uint, userAddress common.Address, amount *big.Int) error {
+	// Get existing positions
+	positions, err := s.positionRepo.FindActiveByUserID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	// Get collateral balance
+	collateralBalance, err := s.collateralService.GetCollateralBalance(ctx, userAddress)
+	if err != nil {
+		return err
+	}
+
+	// Get token address for underlying collateral
+	serviceFactory := services.GetInstance()
+	collateralService, err := serviceFactory.GetCollateralService()
+	if err != nil {
+		return err
+	}
+
+	if len(positions) == 0 {
+		// Create new position
+		position := &models.Position{
+			UserID:           userID,
+			CollateralAmount: collateralBalance.String(),
+			CollateralToken:  collateralService.ContractAddress().Hex(),
+			BorrowedAmount:   amount.String(),
+			BorrowedToken:    s.borrowing.ContractAddress().Hex(),
+			InterestRate:     "0", // Will be updated later
+			Status:           models.StatusActive,
+			HealthFactor:     "0", // Will be updated later
+		}
+
+		return s.positionRepo.Create(ctx, position)
+	} else {
+		// Update existing position
+		position := positions[0]
+
+		// Add new borrowed amount to existing
+		currentBorrowed, success := new(big.Int).SetString(position.BorrowedAmount, 10)
+		if !success {
+			return errors.New("failed to parse borrowed amount")
+		}
+
+		newBorrowedAmount := new(big.Int).Add(currentBorrowed, amount)
+		position.BorrowedAmount = newBorrowedAmount.String()
+		position.CollateralAmount = collateralBalance.String()
+
+		return s.positionRepo.Update(ctx, position)
+	}
+}
+
+// Helper method to update position after repay
+func (s *borrowingService) updatePositionAfterRepay(ctx context.Context, userID uint, userAddress common.Address, amount *big.Int) error {
+	// Get existing positions
+	positions, err := s.positionRepo.FindActiveByUserID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	if len(positions) > 0 {
+		position := positions[0]
+
+		// Get current collateral balance
+		collateralBalance, err := s.collateralService.GetCollateralBalance(ctx, userAddress)
+		if err != nil {
+			return err
+		}
+
+		// Subtract repaid amount from borrowed
+		currentBorrowed, success := new(big.Int).SetString(position.BorrowedAmount, 10)
+		if !success {
+			return errors.New("failed to parse borrowed amount")
+		}
+
+		newBorrowedAmount := new(big.Int).Sub(currentBorrowed, amount)
+		position.BorrowedAmount = newBorrowedAmount.String()
+		position.CollateralAmount = collateralBalance.String()
+
+		// If borrowed amount is 0, close the position
+		if newBorrowedAmount.Cmp(big.NewInt(0)) == 0 {
+			position.Status = models.StatusClosed
+		}
+
+		return s.positionRepo.Update(ctx, position)
+	}
+
+	return nil
 }

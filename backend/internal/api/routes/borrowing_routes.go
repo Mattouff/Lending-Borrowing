@@ -24,6 +24,7 @@ func SetupBorrowingRoutes(router fiber.Router, borrowingService service.Borrowin
 	borrowingRouter.Use(middleware.Authentication(cfg, authService))
 	borrowingRouter.Post("/borrow", borrowingHandler.Borrow)
 	borrowingRouter.Post("/repay", borrowingHandler.Repay)
+	borrowingRouter.Post("/submit-transaction", borrowingHandler.SubmitTransaction) // New wallet transaction endpoint
 	borrowingRouter.Get("/balance", borrowingHandler.GetBorrowedAmount)
 	borrowingRouter.Get("/info", borrowingHandler.GetBorrowingInfo)
 	borrowingRouter.Get("/transactions", borrowingHandler.GetTransactionHistory)

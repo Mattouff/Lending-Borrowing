@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides comprehensive technical documentation for the Lending & Borrowing Platform backend. The platform offers a DeFi solution that allows users to deposit collateral, borrow assets, and earn interest on their deposits.
+This document provides comprehensive technical documentation for the Lending & Borrowing Platform backend. The platform offers a wallet-only DeFi solution that allows users to interact with smart contracts through their own wallets while the backend provides transaction preparation, validation, and data management services.
 
 ## Table of Contents
 
@@ -20,13 +20,13 @@ This document provides comprehensive technical documentation for the Lending & B
 
 ## Architecture
 
-The backend follows a clean architecture pattern with:
+The backend follows a wallet-centric clean architecture pattern with:
 
-- **API Layer**: Handles HTTP requests and responses using Fiber framework
-- **Service Layer**: Contains business logic and orchestrates operations
+- **API Layer**: Handles HTTP requests and prepares transaction data for wallet signing
+- **Service Layer**: Contains business logic and wallet transaction preparation
 - **Repository Layer**: Data access layer for database operations
 - **Domain Layer**: Core business entities and interfaces
-- **Infrastructure Layer**: External systems integration including blockchain
+- **Infrastructure Layer**: External systems integration including blockchain (read-only)
 
 ### Key Components
 
@@ -201,37 +201,40 @@ http://localhost:8080/swagger/
 - `PUT /api/v1/users/admin/:id/verify` - Verify user (admin only)
 - `DELETE /api/v1/users/admin/:id` - Delete user (admin only)
 
-#### Lending Operations
+#### Lending Operations (Wallet-Only)
 
 - `GET /api/v1/lending/pool-info` - Get lending pool information
-- `POST /api/v1/lending/deposit` - Deposit tokens (auth required)
-- `POST /api/v1/lending/withdraw` - Withdraw tokens (auth required)
+- `POST /api/v1/lending/deposit` - **Prepare deposit transaction for wallet signing**
+- `POST /api/v1/lending/withdraw` - **Prepare withdraw transaction for wallet signing**
+- `POST /api/v1/lending/submit-transaction` - **Submit completed wallet transaction**
 - `GET /api/v1/lending/balance` - Get lending balance (auth required)
 - `GET /api/v1/lending/info` - Get lending info (auth required)
 - `GET /api/v1/lending/transactions` - Get lending transaction history (auth required)
 
-#### Borrowing Operations
+#### Borrowing Operations (Wallet-Only)
 
 - `GET /api/v1/borrowing/stats` - Get borrowing statistics
-- `POST /api/v1/borrowing/borrow` - Borrow tokens (auth required)
-- `POST /api/v1/borrowing/repay` - Repay borrowed tokens (auth required)
+- `POST /api/v1/borrowing/borrow` - **Prepare borrow transaction for wallet signing**
+- `POST /api/v1/borrowing/repay` - **Prepare repay transaction for wallet signing**
+- `POST /api/v1/borrowing/submit-transaction` - **Submit completed wallet transaction**
 - `GET /api/v1/borrowing/balance` - Get borrowed amount (auth required)
 - `GET /api/v1/borrowing/info` - Get borrowing info (auth required)
 - `GET /api/v1/borrowing/transactions` - Get borrowing transaction history (auth required)
 
-#### Collateral Operations
+#### Collateral Operations (Read-Only)
 
-- `POST /api/v1/collateral/deposit` - Deposit collateral (auth required)
-- `POST /api/v1/collateral/withdraw` - Withdraw collateral (auth required)
+**Note**: Collateral transactions are performed directly through wallet interactions with smart contracts.
+
 - `GET /api/v1/collateral/balance` - Get collateral balance (auth required)
 - `GET /api/v1/collateral/info` - Get collateral info (auth required)
 
-#### Liquidation Operations
+#### Liquidation Operations (Read-Only)
+
+**Note**: Liquidations are performed directly by liquidators interacting with smart contracts.
 
 - `GET /api/v1/liquidation/positions` - Get liquidatable positions
 - `GET /api/v1/liquidation/history` - Get liquidation history
 - `GET /api/v1/liquidation/bonus` - Get liquidation bonus
-- `POST /api/v1/liquidation/liquidate` - Perform liquidation (auth required)
 
 #### Market Data
 
@@ -249,6 +252,43 @@ The API uses JWT for authentication. Include the token in your request header:
 
 ```
 Authorization: Bearer <your_jwt_token>
+```
+
+### Wallet-Only Transaction Flow
+
+The platform implements a wallet-only transaction system:
+
+#### Transaction Workflow
+
+```mermaid
+sequenceDiagram
+    participant Frontend
+    participant Backend
+    participant Wallet
+    participant Blockchain
+
+    Frontend->>Backend: 1. Prepare Transaction
+    Note over Frontend,Backend: POST /api/v1/lending/deposit<br/>{"amount": "1000000000000000000"}
+
+    Backend->>Backend: Validate request & prepare contract data
+    Backend-->>Frontend: 2. Return Contract Data
+    Note over Backend,Frontend: {contractAddress, methodName, parameters, gasLimit}
+
+    Frontend->>Wallet: 3. Request Transaction Signature
+    Note over Frontend,Wallet: Present transaction details to user
+
+    Wallet->>Blockchain: 4. Sign & Submit Transaction
+    Note over Wallet,Blockchain: User approves & wallet broadcasts
+
+    Blockchain-->>Wallet: 5. Transaction Confirmation
+    Wallet-->>Frontend: 6. Transaction Hash
+
+    Frontend->>Backend: 7. Submit Transaction Hash
+    Note over Frontend,Backend: POST /api/v1/lending/submit-transaction<br/>{"transaction_hash": "0x...", "operation_type": "deposit"}
+
+    Backend->>Blockchain: 8. Validate Transaction
+    Backend->>Backend: 9. Update Database
+    Backend-->>Frontend: 10. Confirmation
 ```
 
 **Valkey-based JWT Validation**
@@ -291,7 +331,7 @@ sequenceDiagram
     API Server->>Valkey: Remove all tokens for user
     API Server->>Database: Soft delete user
     API Server-->>User: Account deleted confirmation
-    
+
     User->>API Server: API request with old JWT
     API Server->>API Server: Verify JWT signature
     API Server->>Valkey: Check if token ID is valid
@@ -325,8 +365,8 @@ Response:
 
 ```json
 {
-"message": "Sign this message to verify you are the owner of 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266. Nonce: 123456",
-"nonce": "123456"
+  "message": "Sign this message to verify you are the owner of 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266. Nonce: 123456",
+  "nonce": "123456"
 }
 ```
 
@@ -359,8 +399,8 @@ The response will include your JWT token:
 
 ```json
 {
-"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-"expires_at": "2025-05-05T10:13:45Z"
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expires_at": "2025-05-05T10:13:45Z"
 }
 ```
 
@@ -389,12 +429,21 @@ For convenience, here are the first few accounts from Anvil's default mnemonic:
 
 ## Smart Contract Integration
 
-The backend interacts with several smart contracts:
+The backend integrates with smart contracts in a **read-only manner** for data queries and transaction preparation:
+
+### Contract Roles
 
 1. **Token**: ERC-20 token contract for the platform's native token
-2. **LendingPool**: Manages deposits and withdrawals
-3. **Borrowing**: Manages borrowing operations
-4. **Collateral**: Manages collateral deposits and withdrawals
+2. **LendingPool**: Manages deposits and withdrawals (users interact directly)
+3. **Borrowing**: Manages borrowing operations (users interact directly)
+4. **Collateral**: Manages collateral deposits and withdrawals (users interact directly)
+
+### Backend Interaction Pattern
+
+- **Read Operations**: Backend queries contract state for balances, rates, etc.
+- **Transaction Preparation**: Backend prepares contract call data for wallet signing
+- **No Write Operations**: Backend never executes state-changing transactions
+- **Event Monitoring**: Backend monitors blockchain events for transaction validation
 
 ### Contract ABIs
 
@@ -521,24 +570,37 @@ go test github.com/Mattouff/Lending-Borrowing/internal/api/handlers -v
    - Ensure Anvil is running with the correct mnemonic
    - Verify contract addresses in `.env` file
    - Check RPC URL and port forwarding
+   - **Note**: Backend only needs read access to blockchain
 
-3. **Valkey Connection Issues**
+3. **Wallet Transaction Issues**
+
+   - Verify contract addresses match deployed contracts
+   - Check user has sufficient token balance and ETH for gas
+   - Ensure frontend is using correct network (chainId)
+   - Verify transaction preparation data is correctly formatted
+
+4. **Transaction Submission Errors**
+
+   - Confirm transaction hash exists on blockchain
+   - Verify transaction was successful (not reverted)
+   - Check user address matches authenticated user
+   - Ensure operation type matches the actual contract interaction
+
+5. **Valkey Connection Issues**
 
    - Verify Valkey container is running: `docker ps`
    - Check Valkey configuration in `.env` file
    - Ensure network connectivity between API and Valkey containers
    - Check Valkey logs: `docker logs lending-borrowing-valkey-dev`
 
-3. **CORS Issues**
+6. **CORS Issues**
 
    - Update CORS configuration in `middleware/cors.go`
    - For authentication with credentials, specific origins must be set
 
-4. **Docker Issues**
+7. **Docker Issues**
    - Check logs: `docker logs lending-borrowing-api-dev`
    - Rebuild containers: `docker-compose -f docker-compose.dev.yml up --build -d`
-
-### Logs
 
 Access container logs:
 
@@ -546,8 +608,6 @@ Access container logs:
 docker logs lending-borrowing-api-dev
 docker logs lending-borrowing-valkey-dev
 ```
-
----
 
 ## Maintenance and Support
 

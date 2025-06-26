@@ -17,10 +17,9 @@ func SetupCollateralRoutes(router fiber.Router, collateralService service.Collat
 	// Collateral routes
 	collateralRouter := router.Group("/collateral")
 
-	// Protected routes (require authentication)
+	// Protected routes (require authentication) - only read-only endpoints
+	// Collateral deposit/withdraw transactions should be done directly via wallet
 	collateralRouter.Use(middleware.Authentication(cfg, authService))
-	collateralRouter.Post("/deposit", collateralHandler.DepositCollateral)
-	collateralRouter.Post("/withdraw", collateralHandler.WithdrawCollateral)
 	collateralRouter.Get("/balance", collateralHandler.GetCollateralBalance)
 	collateralRouter.Get("/info", collateralHandler.GetCollateralInfo)
 }

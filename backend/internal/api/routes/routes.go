@@ -49,7 +49,7 @@ func SetupRoutes(app *fiber.App, services *Services, repositories *Repositories,
 	SetupLendingRoutes(api, services.LendingService, services.AuthService, cfg)
 	SetupBorrowingRoutes(api, services.BorrowingService, services.AuthService, cfg)
 	SetupCollateralRoutes(api, services.CollateralService, services.AuthService, cfg)
-	SetupLiquidationRoutes(api, services.LiquidationService, services.AuthService, cfg)
+	SetupLiquidationRoutes(api, services.LiquidationService)
 
 	// Setup market routes (uses multiple services and repositories)
 	SetupMarketRoutes(

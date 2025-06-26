@@ -10,12 +10,17 @@ import (
 
 // BorrowingService defines the interface for borrowing business logic
 type BorrowingService interface {
-	// Borrow allows users to borrow tokens based on their collateral
-	Borrow(ctx context.Context, userAddress common.Address, amount *big.Int) (string, error)
+	// Wallet-based transaction methods
+	// PrepareBorrow prepares the contract interaction data for a borrow transaction
+	PrepareBorrow(ctx context.Context, userAddress common.Address, amount *big.Int) (*ContractInteractionData, error)
 
-	// Repay allows users to repay borrowed tokens
-	Repay(ctx context.Context, userAddress common.Address, amount *big.Int) (string, error)
+	// PrepareRepay prepares the contract interaction data for a repay transaction
+	PrepareRepay(ctx context.Context, userAddress common.Address, amount *big.Int) (*ContractInteractionData, error)
 
+	// ProcessWalletTransaction validates and processes a wallet-signed transaction
+	ProcessWalletTransaction(ctx context.Context, txHash string, userAddress common.Address, txType models.TransactionType, amount *big.Int) (*models.Transaction, error)
+
+	// Read-only methods
 	// GetBorrowedAmount returns the amount borrowed by a user
 	GetBorrowedAmount(ctx context.Context, userAddress common.Address) (*big.Int, error)
 
@@ -31,6 +36,7 @@ type BorrowingService interface {
 	// GetUserTransactionHistory returns a user's borrowing transaction history
 	GetUserTransactionHistory(ctx context.Context, userAddress common.Address, offset, limit int) ([]*models.Transaction, error)
 
+	// CountUserTransactions counts the number of transactions for a user with optional filtering
 	// CountUserTransactions counts the number of transactions for a user with optional filtering
 	CountUserTransactions(ctx context.Context, address common.Address, filter map[string]any) (int64, error)
 }
