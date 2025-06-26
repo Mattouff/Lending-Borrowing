@@ -22,10 +22,10 @@ import {
   useDisconnect,
   useEnsAvatar,
   useEnsName,
+  useSignMessage,
 } from 'wagmi';
 
 const MODAL_CLOSE_DURATION = 320;
-
 const SimpleKitContext = React.createContext<{
   pendingConnector: Connector | null;
   setPendingConnector: React.Dispatch<React.SetStateAction<Connector | null>>;
@@ -33,6 +33,15 @@ const SimpleKitContext = React.createContext<{
   setIsConnectorError: React.Dispatch<React.SetStateAction<boolean>>;
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isAuthenticated: boolean;
+  isAuthenticating: boolean;
+  authError: string | null;
+  showAuthPrompt: boolean;
+  login: () => Promise<void>;
+  logout: () => void;
+  skipAuth: () => void;
+  connectAndAuth: () => void; // Nouvelle fonction
+  getAuthToken: () => string | null;
 }>({
   pendingConnector: null,
   setPendingConnector: () => null,
@@ -40,19 +49,233 @@ const SimpleKitContext = React.createContext<{
   setIsConnectorError: () => false,
   open: false,
   setOpen: () => false,
+  isAuthenticated: false,
+  isAuthenticating: false,
+  authError: null,
+  showAuthPrompt: false,
+  login: async () => {},
+  logout: () => {},
+  skipAuth: () => {},
+  connectAndAuth: () => {},
+  getAuthToken: () => null,
 });
 
 function SimpleKitProvider(props: { children: React.ReactNode }) {
   const { status, address } = useAccount();
+  const { signMessageAsync } = useSignMessage();
   const [pendingConnector, setPendingConnector] =
     React.useState<Connector | null>(null);
   const [isConnectorError, setIsConnectorError] = React.useState(false);
   const [open, setOpen] = React.useState(false);
+
+  // États pour l'authentification
+  const [isAuthenticating, setIsAuthenticating] = React.useState(false);
+  const [authError, setAuthError] = React.useState<string | null>(null);
+  const [showAuthPrompt, setShowAuthPrompt] = React.useState(false);
+  const [autoAuthAfterConnection, setAutoAuthAfterConnection] =
+    React.useState(false); // Nouveau state
+  const [isAuthenticated, setIsAuthenticated] = React.useState(() => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('auth_token');
+      const expiresAt = localStorage.getItem('auth_expires_at');
+
+      if (token && expiresAt) {
+        const now = new Date();
+        const expiry = new Date(expiresAt);
+        return now < expiry;
+      }
+    }
+    return false;
+  });
+
   const isConnected = address && !pendingConnector;
 
+  // Fonctions d'authentification (inchangées)
+  const getNonce = async (walletAddress: string) => {
+    const response = await fetch(
+      `http://localhost:8080/api/v1/users/nonce/${walletAddress}`
+    );
+    if (!response.ok) {
+      throw new Error('Failed to get nonce');
+    }
+    return response.json();
+  };
+
+  const authenticate = async (
+    walletAddress: string,
+    signature: string,
+    message: string
+  ) => {
+    const response = await fetch('http://localhost:8080/api/v1/users/auth', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        address: walletAddress,
+        signature: signature,
+        message: message,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Authentication failed');
+    }
+    return response.json();
+  };
+
+  const login = async () => {
+    if (!address || !isConnected) {
+      setAuthError('Wallet not connected');
+      return;
+    }
+
+    console.log('Authenticating with address:', address);
+
+    setIsAuthenticating(true);
+    setAuthError(null);
+
+    try {
+      const { message } = await getNonce(address);
+      console.log('Nonce received, requesting signature...');
+
+      const signature = await signMessageAsync({ message });
+      console.log('Signature received, authenticating...');
+
+      const authResponse = await authenticate(address, signature, message);
+      console.log('Authentication successful');
+
+      localStorage.setItem('auth_token', authResponse.token);
+      localStorage.setItem('auth_expires_at', authResponse.expires_at);
+      localStorage.setItem('wallet_address', address);
+
+      setIsAuthenticated(true);
+      setShowAuthPrompt(false);
+      setAutoAuthAfterConnection(false);
+
+      // Fermer le modal après un petit délai pour montrer le succès
+      setTimeout(() => {
+        setOpen(false);
+      }, 500);
+    } catch (error) {
+      console.error('Authentication error:', error);
+      setAuthError(
+        error instanceof Error ? error.message : 'Authentication failed'
+      );
+
+      // En cas d'erreur en mode autoAuth, on peut proposer le prompt manuel
+      if (autoAuthAfterConnection) {
+        setAutoAuthAfterConnection(false);
+        setShowAuthPrompt(true);
+      }
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
+
+  // Fonction pour initier la connexion avec authentification automatique
+  const connectAndAuth = () => {
+    setAutoAuthAfterConnection(true);
+    setOpen(true);
+  };
+
+  const skipAuth = () => {
+    setShowAuthPrompt(false);
+    setAuthError(null);
+    setAutoAuthAfterConnection(false);
+  };
+
+  const logout = () => {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_expires_at');
+    localStorage.removeItem('wallet_address');
+    setIsAuthenticated(false);
+    setShowAuthPrompt(false);
+    setAutoAuthAfterConnection(false);
+  };
+
+  const getAuthToken = (): string | null => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('auth_token');
+    }
+    return null;
+  };
+
+  // Vérifier l'expiration du token
+  React.useEffect(() => {
+    const checkTokenExpiry = () => {
+      if (typeof window !== 'undefined') {
+        const expiresAt = localStorage.getItem('auth_expires_at');
+        if (expiresAt) {
+          const now = new Date();
+          const expiry = new Date(expiresAt);
+          if (now >= expiry) {
+            logout();
+          }
+        }
+      }
+    };
+
+    const interval = setInterval(checkTokenExpiry, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Se déconnecter automatiquement si le wallet est déconnecté
+  React.useEffect(() => {
+    if (!isConnected && isAuthenticated) {
+      logout();
+    }
+  }, [isConnected, isAuthenticated]);
+
+  // Authentification automatique après connexion si demandée
+  React.useEffect(() => {
+    if (
+      status === 'connected' &&
+      address &&
+      !isAuthenticated &&
+      autoAuthAfterConnection &&
+      !isAuthenticating // Éviter les appels multiples
+    ) {
+      // Ajouter un délai pour permettre à la connexion de se stabiliser
+      const timeout = setTimeout(() => {
+        console.log('Starting automatic authentication...');
+        login();
+      }, 1000); // 1 seconde de délai
+
+      return () => clearTimeout(timeout);
+    }
+  }, [
+    status,
+    address,
+    isAuthenticated,
+    autoAuthAfterConnection,
+    isAuthenticating,
+  ]);
+
+  // Afficher le prompt d'authentification pour les connexions normales
+  React.useEffect(() => {
+    if (
+      status === 'connected' &&
+      address &&
+      !isAuthenticated &&
+      !autoAuthAfterConnection
+    ) {
+      const hasSkippedAuth = sessionStorage.getItem(`auth_skipped_${address}`);
+
+      if (!hasSkippedAuth) {
+        setShowAuthPrompt(true);
+        setOpen(true);
+      }
+    }
+  }, [status, address, isAuthenticated, autoAuthAfterConnection]);
+
+  // Modifier ce useEffect pour mieux gérer la fermeture :
   React.useEffect(() => {
     if (status === 'connected' && pendingConnector) {
-      setOpen(false);
+      // Ne fermer le modal que si on n'est PAS en mode autoAuth
+      if (!autoAuthAfterConnection && !showAuthPrompt) {
+        setOpen(false);
+      }
 
       const timeout = setTimeout(() => {
         setPendingConnector(null);
@@ -61,7 +284,7 @@ function SimpleKitProvider(props: { children: React.ReactNode }) {
 
       return () => clearTimeout(timeout);
     }
-  }, [status, setOpen, pendingConnector, setPendingConnector]);
+  }, [status, pendingConnector, autoAuthAfterConnection, showAuthPrompt]);
 
   return (
     <SimpleKitContext.Provider
@@ -72,6 +295,15 @@ function SimpleKitProvider(props: { children: React.ReactNode }) {
         setIsConnectorError,
         open,
         setOpen,
+        isAuthenticated,
+        isAuthenticating,
+        authError,
+        showAuthPrompt,
+        login,
+        logout,
+        skipAuth,
+        connectAndAuth, // Nouvelle fonction
+        getAuthToken,
       }}
     >
       {props.children}
@@ -84,21 +316,36 @@ function SimpleKitProvider(props: { children: React.ReactNode }) {
   );
 }
 
-function ConnectWalletButton() {
+function ConnectWalletButton({ autoAuth = false }: { autoAuth?: boolean }) {
   const simplekit = useSimpleKit();
   const { address } = useAccount();
   const { data: ensName } = useEnsName({ address });
   const { data: ensAvatar } = useEnsAvatar({ name: ensName! });
 
+  const handleClick = () => {
+    if (autoAuth && !simplekit.isConnected) {
+      simplekit.connectAndAuth(); // Connexion avec authentification automatique
+    } else {
+      simplekit.toggleModal(); // Comportement normal
+    }
+  };
+
   return (
-    <Button onClick={simplekit.toggleModal} className="rounded-xl">
+    <Button onClick={handleClick} className="rounded-xl">
       {simplekit.isConnected ? (
         <>
           {ensAvatar && <img src={ensAvatar} alt="ENS Avatar" />}
           {address && (
-            <span>{ensName ? `${ensName}` : simplekit.formattedAddress}</span>
+            <span>
+              {ensName ? `${ensName}` : simplekit.formattedAddress}
+              {simplekit.isAuthenticated && (
+                <span className="ml-1 text-green-500">✓</span>
+              )}
+            </span>
           )}
         </>
+      ) : autoAuth ? (
+        'Connect & Authenticate'
       ) : (
         'Connect Wallet'
       )}
@@ -119,22 +366,94 @@ function Account() {
     : undefined;
 
   function handleDisconnect() {
+    context.logout();
     context.setOpen(false);
     setTimeout(() => {
       disconnect();
     }, MODAL_CLOSE_DURATION);
   }
 
+  function handleSkipAuth() {
+    // Marquer que l'utilisateur a refusé l'auth pour cette session
+    if (address) {
+      sessionStorage.setItem(`auth_skipped_${address}`, 'true');
+    }
+    context.skipAuth();
+  }
+
+  // Si on doit montrer le prompt d'authentification
+  if (context.showAuthPrompt && !context.isAuthenticated) {
+    return (
+      <>
+        <SimpleKitModalHeader>
+          <SimpleKitModalTitle>Authenticate Your Wallet</SimpleKitModalTitle>
+          <SimpleKitModalDescription className="sr-only">
+            Sign a message to authenticate with the platform.
+          </SimpleKitModalDescription>
+        </SimpleKitModalHeader>
+        <SimpleKitModalBody className="h-[320px]">
+          <div className="flex w-full flex-col items-center justify-center gap-6 md:pt-5">
+            <div className="size-24 flex items-center justify-center">
+              <img
+                className="rounded-full"
+                src={`https://avatar.vercel.sh/${address}?size=150`}
+                alt="User gradient avatar"
+              />
+            </div>
+
+            <div className="space-y-1 px-3.5 text-center sm:px-0">
+              <h1 className="text-xl font-semibold">Welcome!</h1>
+              <p className="text-balance text-sm text-muted-foreground">
+                Would you like to sign a message to authenticate and access all
+                platform features?
+              </p>
+            </div>
+
+            <div className="w-full space-y-3">
+              <Button
+                className="w-full rounded-xl"
+                onClick={context.login}
+                disabled={context.isAuthenticating}
+              >
+                {context.isAuthenticating
+                  ? 'Authenticating...'
+                  : 'Sign Message to Authenticate'}
+              </Button>
+
+              <Button
+                className="w-full rounded-xl"
+                variant="outline"
+                onClick={handleSkipAuth}
+                disabled={context.isAuthenticating}
+              >
+                Skip for Now
+              </Button>
+
+              {context.authError && (
+                <p className="text-xs text-red-500 text-center">
+                  {context.authError}
+                </p>
+              )}
+            </div>
+          </div>
+        </SimpleKitModalBody>
+      </>
+    );
+  }
+
+  // Interface normale après connexion/authentification
   return (
     <>
       <SimpleKitModalHeader>
-        <SimpleKitModalTitle>Connected</SimpleKitModalTitle>
+        <SimpleKitModalTitle>
+          {context.isAuthenticated ? 'Authenticated' : 'Connected'}
+        </SimpleKitModalTitle>
         <SimpleKitModalDescription className="sr-only">
           Account modal for your connected Web3 wallet.
         </SimpleKitModalDescription>
       </SimpleKitModalHeader>
-      <SimpleKitModalBody className="h-[280px]">
-        <div className="flex w-full flex-col items-center justify-center gap-8 md:pt-5">
+      <SimpleKitModalBody className="h-[320px]">
+        <div className="flex w-full flex-col items-center justify-center gap-6 md:pt-5">
           <div className="size-24 flex items-center justify-center">
             <img
               className="rounded-full"
@@ -155,9 +474,39 @@ function Account() {
             </p>
           </div>
 
-          <Button className="w-full rounded-xl" onClick={handleDisconnect}>
-            Disconnect
-          </Button>
+          <div className="w-full space-y-3">
+            {!context.isAuthenticated && (
+              <Button
+                className="w-full rounded-xl"
+                onClick={context.login}
+                disabled={context.isAuthenticating}
+              >
+                {context.isAuthenticating
+                  ? 'Authenticating...'
+                  : 'Sign Message to Login'}
+              </Button>
+            )}
+
+            {context.isAuthenticated && (
+              <div className="text-center">
+                <p className="text-sm text-green-600 mb-2">✓ Authenticated</p>
+              </div>
+            )}
+
+            {context.authError && (
+              <p className="text-xs text-red-500 text-center">
+                {context.authError}
+              </p>
+            )}
+
+            <Button
+              className="w-full rounded-xl"
+              variant="outline"
+              onClick={handleDisconnect}
+            >
+              Disconnect
+            </Button>
+          </div>
         </div>
       </SimpleKitModalBody>
     </>
@@ -190,6 +539,29 @@ function Connectors() {
 
 function WalletConnecting() {
   const context = React.useContext(SimpleKitContext);
+  const { status } = useAccount();
+
+  // Déterminer le titre et la description en fonction de l'état
+  const getTitle = () => {
+    if (context.isConnectorError) return 'Request Error';
+    if (status === 'connected' && context.isAuthenticating)
+      return 'Authenticating...';
+    if (status === 'connected') return 'Connected';
+    return 'Requesting Connection';
+  };
+
+  const getDescription = () => {
+    if (context.isConnectorError) {
+      return 'There was an error with the request. Click above to try again.';
+    }
+    if (status === 'connected' && context.isAuthenticating) {
+      return 'Please sign the message in your wallet to authenticate.';
+    }
+    if (status === 'connected') {
+      return 'Wallet connected successfully. Preparing authentication...';
+    }
+    return `Open the ${context.pendingConnector?.name} browser extension to connect your wallet.`;
+  };
 
   return (
     <div className="flex w-full flex-col items-center justify-center gap-9 md:pt-5">
@@ -200,20 +572,29 @@ function WalletConnecting() {
             alt={context.pendingConnector?.name}
             className="size-full overflow-hidden rounded-2xl"
           />
-          <img />
+
+          {/* Spinner pendant l'authentification */}
+          {(context.isAuthenticating ||
+            (status === 'connected' && !context.isAuthenticated)) && (
+            <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-2xl">
+              <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
+            </div>
+          )}
+
           {context.isConnectorError ? <RetryConnectorButton /> : null}
         </div>
       )}
 
       <div className="space-y-3.5 px-3.5 text-center sm:px-0">
-        <h1 className="text-xl font-semibold">
-          {context.isConnectorError ? 'Request Error' : 'Requesting Connection'}
-        </h1>
+        <h1 className="text-xl font-semibold">{getTitle()}</h1>
         <p className="text-balance text-sm text-muted-foreground">
-          {context.isConnectorError
-            ? 'There was an error with the request. Click above to try again.'
-            : `Open the ${context.pendingConnector?.name} browser extension to connect your wallet.`}
+          {getDescription()}
         </p>
+
+        {/* Afficher l'erreur d'authentification si elle existe */}
+        {context.authError && (
+          <p className="text-sm text-red-500 mt-2">{context.authError}</p>
+        )}
       </div>
     </div>
   );
@@ -455,10 +836,19 @@ function useSimpleKit() {
   return {
     isModalOpen,
     isConnected,
+    isAuthenticated: context.isAuthenticated,
+    isAuthenticating: context.isAuthenticating,
+    authError: context.authError,
+    showAuthPrompt: context.showAuthPrompt,
     formattedAddress,
     open,
     close,
     toggleModal,
+    login: context.login,
+    logout: context.logout,
+    skipAuth: context.skipAuth,
+    getAuthToken: context.getAuthToken,
+    connectAndAuth: context.connectAndAuth, // Add this line
   };
 }
 

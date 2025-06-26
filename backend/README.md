@@ -106,6 +106,7 @@ cp .env.example .env.dev
 
    ```bash
    cd contracts
+   forge install
    forge script script/Deploy.s.sol --fork-url http://localhost:8545 --broadcast
    ```
 
